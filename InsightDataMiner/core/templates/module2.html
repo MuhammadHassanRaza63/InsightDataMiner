@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Analytics | InsightDataMiner</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <style>
+        * { cursor: none !important; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; min-height: 100vh; position: relative; overflow-x: hidden; padding-bottom: 50px; }
+        
+        #scroll-progress { position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: linear-gradient(to right, #a855f7, #ec4899); z-index: 10000; box-shadow: 0 0 15px #a855f7, 0 0 30px #ec4899; transition: width 0.1s; }
+        body::before { content: ""; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(168,85,247,0.12) 0%, rgba(236,72,153,0.12) 25%, transparent 50%); animation: rotateAurora 30s linear infinite; z-index: -2; }
+        @keyframes rotateAurora { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #particles-js { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+        .cursor-dot { position: fixed; top: 0; left: 0; width: 6px; height: 6px; background-color: #ec4899; border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: width 0.1s, height 0.1s; box-shadow: 0 0 10px #ec4899; }
+        .cursor-ring { position: fixed; top: 0; left: 0; width: 34px; height: 34px; border: 1.5px solid rgba(168, 85, 247, 0.6); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%, -50%); transition: width 0.2s, height 0.2s, background-color 0.2s, border-color 0.2s; box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); }
+        .cursor-hover .cursor-ring { width: 55px; height: 55px; background-color: rgba(236, 72, 153, 0.1); border-color: #ec4899; }
+        .cursor-hover .cursor-dot { opacity: 0; }
+
+        .navbar-custom { background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 15px 0; z-index: 1000; }
+        .brand-logo-wrapper { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .modern-ai-logo { width: 45px; height: 45px; filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.6)); }
+        .spin-slow { transform-origin: center; animation: spinLogo 8s linear infinite; }
+        .pulse-core { transform-origin: center; animation: corePulse 2s ease-in-out infinite alternate; }
+        @keyframes spinLogo { 100% { transform: rotate(360deg); } }
+        @keyframes corePulse { 0% { transform: scale(0.7); opacity: 0.6; filter: drop-shadow(0 0 5px #38bdf8); } 100% { transform: scale(1.3); opacity: 1; filter: drop-shadow(0 0 20px #8b5cf6); } }
+
+        .brand-text { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; color: #ffffff; display: flex; align-items: center; }
+        .brand-text .thin { font-weight: 300; color: #94a3b8; letter-spacing: 0px; margin-left: 2px;}
+        .text-gradient-animated { background: linear-gradient(to right, #38bdf8, #8b5cf6, #38bdf8); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s linear infinite; }
+        
+        .dashboard-container { margin-top: 100px; }
+        
+        .glass-card { position: relative; background: rgba(30, 41, 59, 0.3); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; text-align: left; overflow: hidden; transition: border-color 0.4s, background 0.4s; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
+        .glass-card:hover { border-color: rgba(168, 85, 247, 0.4); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); background: rgba(30, 41, 59, 0.5); }
+
+        .upload-zone { border: 2px dashed rgba(168, 85, 247, 0.4); border-radius: 15px; padding: 30px; background: rgba(15, 23, 42, 0.3); text-align: center; cursor: pointer; transition: 0.3s; }
+        .upload-zone:hover { border-color: #ec4899; background: rgba(236, 72, 153, 0.05); transform: scale(1.02); }
+
+        .form-select, .form-control { background-color: rgba(15, 23, 42, 0.6) !important; color: #f8fafc !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 12px; padding: 12px 15px; font-size: 0.95rem;}
+        .form-select:focus, .form-control:focus { border-color: #a855f7 !important; box-shadow: 0 0 15px rgba(168, 85, 247, 0.2) !important; }
+        
+        .btn-glow { background: linear-gradient(135deg, #a855f7, #ec4899); color: white; border: none; padding: 14px 24px; border-radius: 12px; font-weight: 700; width: 100%; transition: 0.3s; position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-glow:hover { box-shadow: 0 10px 30px rgba(236, 72, 153, 0.6); color: white; transform: translateY(-2px);}
+        
+        /* Compact Graph Canvas for 1-Screen Fit */
+        .graph-canvas { background: rgba(2, 6, 23, 0.6); border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.2); padding: 5px; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); overflow: hidden;}
+        
+        /* Tighter KPI Box */
+        .kpi-box { padding: 10px 15px; border-radius: 10px; background: linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8)); border: 1px solid rgba(255,255,255,0.05); text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center;}
+        
+        .stat-badge { background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); color: #c084fc; padding: 8px 15px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px;}
+    </style>
+</head>
+<body>
+
+    <div id="scroll-progress"></div>
+    <div id="particles-js"></div>
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+
+    <nav class="navbar navbar-custom fixed-top px-4" data-aos="fade-down" data-aos-duration="800">
+        <a class="brand-logo-wrapper interactive-hover" href="{% url 'home' %}">
+            <svg class="modern-ai-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8" />
+                        <stop offset="100%" stop-color="#8b5cf6" />
+                    </linearGradient>
+                    <linearGradient id="coreGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#10b981" />
+                        <stop offset="100%" stop-color="#38bdf8" />
+                    </linearGradient>
+                </defs>
+                <circle cx="50" cy="50" r="44" stroke="url(#logoGrad)" stroke-width="2" fill="none" stroke-dasharray="15 10" class="spin-slow" />
+                <g transform="translate(0, 5)">
+                    <path d="M35,20 L35,35 M50,15 L50,35 M65,20 L65,35" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round" class="flow-down" stroke-dasharray="20"/>
+                    <path d="M25,35 L75,35 L60,65 L40,65 Z" fill="none" stroke="url(#logoGrad)" stroke-width="2" />
+                    <g class="spin-fast" transform-origin="50% 45%">
+                         <path d="M50,38 L50,58 M40,48 L60,48 M43,41 L57,55 M57,41 L43,55" stroke="rgba(139, 92, 246, 0.5)" stroke-width="2" stroke-linecap="round" />
+                         <circle cx="50" cy="48" r="4" fill="none" stroke="url(#logoGrad)" stroke-width="2"/>
+                    </g>
+                </g>
+                <circle cx="50" cy="78" r="8" fill="url(#coreGrad)" class="pulse-core" />
+            </svg>
+            <span class="brand-text d-none d-sm-flex">Insight<span class="text-gradient-animated" style="margin-left: 2px;">Data</span><span class="thin">Miner</span></span>
+        </a>
+        <div class="ms-auto d-flex gap-3 align-items-center">
+            <span class="badge bg-purple bg-opacity-10 text-purple border border-purple border-opacity-25 rounded-pill px-3 py-2 fw-medium" style="color:#e879f9; border-color:rgba(232, 121, 249, 0.4)!important;"><i class="fa-solid fa-chart-line me-2"></i>Module 2 Active</span>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 dashboard-container">
+        
+        {% if standby %}
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8 text-center" data-aos="zoom-in">
+                <div class="glass-card mt-5 py-5 d-flex flex-column align-items-center">
+                    <div class="radar-box mb-4"><div class="radar-grid"></div></div>
+                    <h2 class="fw-bold text-white mb-3">No Active Dataset Detected</h2>
+                    <p class="text-muted mb-5 max-w-500 mx-auto">To generate visualizations, the engine requires data. You can either process a file in Module 1 first, or upload a new raw dataset here.</p>
+                    
+                    <div class="w-100 px-md-5">
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="upload-zone interactive-hover mb-4" onclick="document.getElementById('new-file').click();">
+                                <i class="fa-solid fa-cloud-arrow-up fa-3x text-pink mb-3" style="color: #ec4899;"></i>
+                                <h6 id="new-file-display" class="fw-bold text-white">Upload New Dataset</h6>
+                                <p class="small text-muted m-0">.csv, .xlsx</p>
+                                <input type="file" id="new-file" name="new_dataset" accept=".csv, .xlsx, .xls" style="display: none;" onchange="this.form.submit()">
+                            </div>
+                        </form>
+                        
+                        <div class="d-flex align-items-center my-4">
+                            <hr class="flex-grow-1 border-secondary"><span class="mx-3 text-muted small fw-bold">OR</span><hr class="flex-grow-1 border-secondary">
+                        </div>
+                        
+                        <div class="magnetic-btn-wrap">
+                            <a href="{% url 'module1' %}" class="btn btn-dark border border-secondary text-light fw-bold py-3 w-100 rounded-3 interactive-hover magnetic-btn" style="background: rgba(15,23,42,0.6);">
+                                <i class="fa-solid fa-wand-magic-sparkles me-2 text-info"></i> Go to Module 1 (Preprocessing)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="row mb-3" data-aos="fade-down">
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-3 align-items-center bg-dark bg-opacity-25 border border-light border-opacity-10 rounded-4 p-3">
+                    <span class="fw-bold text-white"><i class="fa-solid fa-circle-check text-success me-2"></i> Dataset Ready</span>
+                    {% if dataset_name %}<span class="stat-badge d-none d-md-flex"><i class="fa-solid fa-file-csv me-1"></i> {{ dataset_name }}</span>{% endif %}
+                    <span class="stat-badge"><i class="fa-solid fa-list-ol me-1"></i> {{ total_rows }} Observations</span>
+                    
+                    <form method="POST" enctype="multipart/form-data" class="ms-md-3">
+                        {% csrf_token %}
+                        <input type="file" id="quick-upload" name="new_dataset" accept=".csv, .xlsx, .xls" style="display: none;" onchange="this.form.submit()">
+                        <button type="button" class="btn btn-sm btn-outline-secondary text-light interactive-hover rounded-pill px-3" onclick="document.getElementById('quick-upload').click();">
+                            <i class="fa-solid fa-rotate me-1"></i> Change File
+                        </button>
+                    </form>
+
+                    <form method="POST" class="ms-auto d-flex gap-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="auto_dashboard">
+                        <button type="submit" class="btn btn-sm rounded-pill px-4 py-2 fw-bold shadow-sm interactive-hover" style="background: linear-gradient(135deg, #a855f7, #ec4899); color: white; border: none; box-shadow: 0 0 15px rgba(236,72,153,0.5);">
+                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Executive Dashboard
+                        </button>
+                    </form>
+                </div>
+                {% if success_msg %}<div class="alert alert-success mt-3 py-2 small border-0 bg-success bg-opacity-10 text-success rounded-3"><i class="fa-solid fa-check me-1"></i> {{ success_msg }}</div>{% endif %}
+                {% if error %}<div class="alert alert-danger mt-3 py-2 small border-0 bg-danger bg-opacity-10 text-danger rounded-3"><i class="fa-solid fa-triangle-exclamation me-1"></i> {{ error }}</div>{% endif %}
+            </div>
+        </div>
+
+        {% if auto_summary and auto_dashboard_charts %}
+        <div class="mb-4 glass-card p-3" id="dashboard-export-area" style="background: #020617; border-color: rgba(236, 72, 153, 0.3);">
+            
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary pb-2">
+                <div>
+                    <h4 class="fw-bold text-white m-0"><i class="fa-solid fa-chart-line text-pink me-2" style="color:#ec4899;"></i> Executive Insights</h4>
+                </div>
+                
+                <div class="d-flex gap-2" id="dashboard-controls">
+                    <button onclick="downloadDashboardImage()" class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 interactive-hover">
+                        <i class="fa-solid fa-image me-1"></i> Export Image
+                    </button>
+                    <form method="POST" class="m-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="clear_dashboard">
+                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 interactive-hover"><i class="fa-solid fa-trash-can me-1"></i> Clear</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mb-3 px-3 py-2 rounded-3" style="background: rgba(56, 189, 248, 0.05); border-left: 3px solid #38bdf8;">
+                <p class="text-light small m-0" style="line-height: 1.6;">
+                    <i class="fa-solid fa-lightbulb text-info me-1"></i> <strong>Quick Overview:</strong> 
+                    This visual report analyzes <strong>{{ auto_summary.rows }}</strong> data records. The key focus is on the dominant group <strong>"{{ auto_summary.kpi1_val }}"</strong>. The dataset has a cleanliness score of <strong>{{ auto_summary.health }}%</strong>, and we highlight the critical metric averaging at <strong>{{ auto_summary.kpi3_val|slice:"5:" }}</strong>.
+                </p>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-md-3">
+                    <div class="kpi-box" style="border-top: 3px solid #38bdf8;">
+                        <span class="text-muted small text-uppercase mb-1" style="font-size: 0.70rem;">{{ auto_summary.kpi1_title }}</span>
+                        <h5 class="text-white fw-bold m-0" style="font-size: 1.1rem;">{{ auto_summary.kpi1_val }}</h5>
+                        <span class="text-info m-0 mt-1" style="font-size: 0.70rem;">{{ auto_summary.kpi1_sub }}</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="kpi-box" style="border-top: 3px solid #10b981;">
+                        <span class="text-muted small text-uppercase mb-1" style="font-size: 0.70rem;">{{ auto_summary.kpi2_title }}</span>
+                        <h5 class="text-white fw-bold m-0" style="font-size: 1.1rem;">{{ auto_summary.kpi2_val }}</h5>
+                        <span class="text-success m-0 mt-1" style="font-size: 0.70rem;">{{ auto_summary.kpi2_sub }}</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="kpi-box" style="border-top: 3px solid #c084fc;">
+                        <span class="text-muted small text-uppercase mb-1" style="font-size: 0.70rem;">{{ auto_summary.kpi3_title }}</span>
+                        <h5 class="text-white fw-bold m-0" style="font-size: 1.1rem;">{{ auto_summary.kpi3_val }}</h5>
+                        <span class="text-purple m-0 mt-1" style="color:#c084fc; font-size: 0.70rem;">{{ auto_summary.kpi3_sub }}</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="kpi-box" style="border-top: 3px solid #ec4899;">
+                        <span class="text-muted small text-uppercase mb-1" style="font-size: 0.70rem;">{{ auto_summary.kpi4_title }}</span>
+                        <h5 class="text-white fw-bold m-0" style="font-size: 1.1rem;">{{ auto_summary.kpi4_val }}</h5>
+                        <span class="text-pink m-0 mt-1" style="color:#ec4899; font-size: 0.70rem;">{{ auto_summary.kpi4_sub }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-2">
+                {% for chart in auto_dashboard_charts %}
+                <div class="col-xl-6 col-lg-6">
+                    <div class="graph-canvas w-100">
+                        <div class="w-100" style="overflow-x: auto;"> 
+                            {{ chart|safe }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+        </div>
+        {% endif %}
+
+
+        <div class="row g-3 mt-2">
+            
+            <div class="col-xl-3 col-lg-4">
+                <div class="glass-card h-100 p-3" data-aos="fade-right">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold m-0 text-muted text-uppercase letter-spacing-1"><i class="fa-solid fa-wrench me-2"></i> Manual Builder</h6>
+                    </div>
+
+                    <form method="POST" id="chartForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="generate_chart">
+                        
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1 fw-medium text-uppercase" style="font-size: 0.75rem;">1. Type</label>
+                            <select name="chart_type" class="form-select form-select-sm interactive-hover shadow-none" required id="chartTypeSelect">
+                                <option value="" disabled selected>Select style...</option>
+                                <optgroup label="Relationship & Distribution">
+                                    <option value="scatter" {% if current_config.type == 'scatter' %}selected{% endif %}>Scatter Plot</option>
+                                    <option value="histogram" {% if current_config.type == 'histogram' %}selected{% endif %}>Histogram</option>
+                                    <option value="box" {% if current_config.type == 'box' %}selected{% endif %}>Box Plot</option>
+                                </optgroup>
+                                <optgroup label="Comparison & Trends">
+                                    <option value="bar" {% if current_config.type == 'bar' %}selected{% endif %}>Bar Chart</option>
+                                    <option value="line" {% if current_config.type == 'line' %}selected{% endif %}>Line Trend</option>
+                                    <option value="pie" {% if current_config.type == 'pie' %}selected{% endif %}>Pie Chart</option>
+                                </optgroup>
+                                <optgroup label="Advanced">
+                                    <option value="heatmap" {% if current_config.type == 'heatmap' %}selected{% endif %}>Correlation Heatmap</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        
+                        <div class="p-2 border border-light border-opacity-10 rounded-3 bg-dark bg-opacity-25 mb-3" id="axisConfigBlock">
+                            <div class="mb-2" id="xAxisDiv">
+                                <label class="small text-light mb-1" style="font-size: 0.75rem;"><i class="fa-solid fa-arrows-left-right me-1 text-info"></i> X-Axis</label>
+                                <select name="x_axis" class="form-select form-select-sm interactive-hover shadow-none border-0 bg-dark">
+                                    <option value="" selected>Select feature...</option>
+                                    {% for col in all_cols %}
+                                        <option value="{{ col }}" {% if current_config.x == col %}selected{% endif %}>{{ col }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="mb-1" id="yAxisDiv">
+                                <label class="small text-light mb-1" style="font-size: 0.75rem;"><i class="fa-solid fa-arrows-up-down me-1 text-warning"></i> Y-Axis</label>
+                                <select name="y_axis" class="form-select form-select-sm interactive-hover shadow-none border-0 bg-dark">
+                                    <option value="" selected>Select feature...</option>
+                                    {% for col in numeric_cols %}
+                                        <option value="{{ col }}" {% if current_config.y == col %}selected{% endif %}>{{ col }} (Num)</option>
+                                    {% endfor %}
+                                    {% for col in categorical_cols %}
+                                        <option value="{{ col }}" {% if current_config.y == col %}selected{% endif %}>{{ col }} (Cat)</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4" id="colorConfigBlock">
+                            <label class="small text-muted mb-1 fw-medium text-uppercase" style="font-size: 0.75rem;">3. Color</label>
+                            <select name="color_col" class="form-select form-select-sm interactive-hover shadow-none">
+                                <option value="none" selected>No grouping</option>
+                                {% for col in categorical_cols %}
+                                    <option value="{{ col }}" {% if current_config.color == col %}selected{% endif %}>{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-outline-light btn-sm w-100 py-2 interactive-hover">
+                            <i class="fa-solid fa-play me-2"></i> Plot
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-xl-9 col-lg-8">
+                <div class="glass-card h-100 d-flex flex-column p-3" data-aos="fade-left">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold m-0 text-white"><i class="fa-solid fa-desktop text-info me-2"></i> Custom Canvas</h6>
+                    </div>
+                    
+                    {% if chart_error %}
+                        <div class="alert alert-warning py-1 small border-0 bg-warning bg-opacity-10 text-warning rounded-3 mb-2"><i class="fa-solid fa-triangle-exclamation me-1"></i> {{ chart_error }}</div>
+                    {% endif %}
+
+                    <div class="graph-canvas flex-grow-1 w-100" id="plotly-container" style="min-height: 400px; box-shadow: none;">
+                        {% if chart_html %}
+                            <div class="w-100 h-100 d-flex align-items-center justify-content-center">
+                                {{ chart_html|safe }}
+                            </div>
+                        {% else %}
+                            <div class="text-center opacity-50 p-5">
+                                <i class="fa-solid fa-chart-line fa-3x text-muted mb-3"></i>
+                                <p class="small text-muted m-0">Use Auto-AI or plot manually.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% endif %} </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        AOS.init({ once: true, offset: 50 });
+        
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorRing = document.querySelector('.cursor-ring');
+        document.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px'; cursorDot.style.top = e.clientY + 'px';
+            cursorRing.style.left = e.clientX + 'px'; cursorRing.style.top = e.clientY + 'px';
+        });
+
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { "value": 40 },
+                "color": { "value": "#ec4899" }, "shape": { "type": "circle" },
+                "opacity": { "value": 0.3 }, "size": { "value": 3 },
+                "line_linked": { "enable": true, "distance": 150, "color": "#c084fc", "opacity": 0.15, "width": 1 }, 
+                "move": { "enable": true, "speed": 1 }
+            }, "retina_detect": true
+        });
+
+        const chartSelect = document.getElementById('chartTypeSelect');
+        const xAxisDiv = document.getElementById('xAxisDiv');
+        const yAxisDiv = document.getElementById('yAxisDiv');
+        const colorBlock = document.getElementById('colorConfigBlock');
+
+        if(chartSelect) {
+            chartSelect.addEventListener('change', function() {
+                const type = this.value;
+                xAxisDiv.style.display = 'block'; yAxisDiv.style.display = 'block'; colorBlock.style.display = 'block';
+                if(type === 'heatmap') {
+                    xAxisDiv.style.display = 'none'; yAxisDiv.style.display = 'none'; colorBlock.style.display = 'none';
+                } else if(type === 'histogram') { yAxisDiv.style.display = 'none'; }
+            });
+            if(chartSelect.value) { chartSelect.dispatchEvent(new Event('change')); }
+        }
+
+        // --- HD IMAGE EXPORT FUNCTION ---
+        function downloadDashboardImage() {
+            const controls = document.getElementById('dashboard-controls');
+            controls.style.display = 'none'; // Hide buttons before capture
+
+            const element = document.getElementById('dashboard-export-area');
+
+            html2canvas(element, {
+                scale: 2, // High-Resolution capture
+                backgroundColor: '#020617', // Preserves the dark theme exactly
+                useCORS: true // Allows rendering Plotly SVGs/Canvas
+            }).then(canvas => {
+                // Convert to PNG Data URL
+                let image = canvas.toDataURL("image/png", 1.0);
+                
+                // Create a temporary link to trigger download
+                let link = document.createElement('a');
+                link.download = 'InsightDataMiner_Executive_Dashboard.png';
+                link.href = image;
+                link.click();
+
+                // Show buttons again after download
+                controls.style.display = 'flex'; 
+            });
+        }
+    </script>
+</body>
+</html>

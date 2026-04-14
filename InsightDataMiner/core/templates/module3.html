@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoML Engine | InsightDataMiner</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <style>
+        /* --- CORE THEME (EMERALD/GREEN) --- */
+        * { cursor: none !important; }
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; min-height: 100vh; position: relative; overflow-x: hidden; padding-bottom: 50px; }
+        
+        #scroll-progress { position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: linear-gradient(to right, #10b981, #34d399); z-index: 10000; box-shadow: 0 0 15px #10b981; transition: width 0.1s; }
+        body::before { content: ""; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 25%, transparent 50%); animation: rotateAurora 30s linear infinite; z-index: -2; }
+        @keyframes rotateAurora { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #particles-js { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+        /* Custom Cursor Green */
+        .cursor-dot { position: fixed; top: 0; left: 0; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); box-shadow: 0 0 10px #10b981; }
+        .cursor-ring { position: fixed; top: 0; left: 0; width: 34px; height: 34px; border: 1.5px solid rgba(16, 185, 129, 0.6); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%, -50%); transition: width 0.2s, height 0.2s, background-color 0.2s, border-color 0.2s; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+        .cursor-hover .cursor-ring { width: 55px; height: 55px; background-color: rgba(16, 185, 129, 0.1); border-color: #34d399; }
+        .cursor-hover .cursor-dot { opacity: 0; }
+
+        /* Navbar & Glass Cards */
+        .navbar-custom { background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 15px 0; z-index: 1000; }
+        .brand-logo-wrapper { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .modern-ai-logo { width: 45px; height: 45px; filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.6)); }
+        .spin-slow { transform-origin: center; animation: spinLogo 8s linear infinite; }
+        .pulse-core { transform-origin: center; animation: corePulse 2s ease-in-out infinite alternate; }
+        @keyframes spinLogo { 100% { transform: rotate(360deg); } }
+        @keyframes corePulse { 0% { transform: scale(0.7); opacity: 0.6; filter: drop-shadow(0 0 5px #38bdf8); } 100% { transform: scale(1.3); opacity: 1; filter: drop-shadow(0 0 20px #8b5cf6); } }
+        .brand-text { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; color: #ffffff; display: flex; align-items: center; }
+        .text-gradient-animated { background: linear-gradient(to right, #38bdf8, #8b5cf6, #38bdf8); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s linear infinite; }
+        
+        .dashboard-container { margin-top: 100px; }
+        .glass-card { position: relative; background: rgba(30, 41, 59, 0.3); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); transition: border-color 0.4s; }
+        .glass-card:hover { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); }
+
+        .form-select, .form-control { background-color: rgba(15, 23, 42, 0.6) !important; color: #f8fafc !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 12px; padding: 12px 15px; }
+        .form-select:focus, .form-control:focus { border-color: #10b981 !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2) !important; }
+        .form-select option { background-color: #0f172a; color: #f8fafc; }
+
+        .btn-glow-green { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 14px 24px; border-radius: 12px; font-weight: 700; width: 100%; transition: 0.3s; position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;}
+        .btn-glow-green:hover { box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4); color: white; transform: translateY(-2px);}
+
+        .winner-card { background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.05)); border: 1px solid #10b981; border-radius: 16px; padding: 25px; text-align: center; position: relative; overflow: hidden;}
+        .winner-card::before { content: "\f091"; font-family: "Font Awesome 6 Free"; font-weight: 900; position: absolute; top: -10px; right: -10px; font-size: 8rem; color: rgba(16, 185, 129, 0.1); transform: rotate(15deg); pointer-events: none;}
+        
+        .table-dark { --bs-table-bg: transparent; }
+        .table-hover tbody tr:hover { background-color: rgba(16, 185, 129, 0.05) !important; }
+
+        .upload-zone { border: 2px dashed rgba(16, 185, 129, 0.4); border-radius: 15px; padding: 30px; background: rgba(15, 23, 42, 0.3); text-align: center; cursor: pointer; transition: 0.3s;}
+        .upload-zone:hover { border-color: #10b981; background: rgba(16, 185, 129, 0.05); }
+    </style>
+</head>
+<body>
+
+    <div id="scroll-progress"></div>
+    <div id="particles-js"></div>
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+
+    <nav class="navbar navbar-custom fixed-top px-4" data-aos="fade-down" data-aos-duration="800">
+        <a class="brand-logo-wrapper interactive-hover" href="{% url 'home' %}">
+            <svg class="modern-ai-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8" />
+                        <stop offset="100%" stop-color="#8b5cf6" />
+                    </linearGradient>
+                    <linearGradient id="coreGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#10b981" />
+                        <stop offset="100%" stop-color="#38bdf8" />
+                    </linearGradient>
+                </defs>
+                <circle cx="50" cy="50" r="44" stroke="url(#logoGrad)" stroke-width="2" fill="none" stroke-dasharray="15 10" class="spin-slow" />
+                <g transform="translate(0, 5)">
+                    <path d="M35,20 L35,35 M50,15 L50,35 M65,20 L65,35" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round" stroke-dasharray="20"/>
+                    <path d="M25,35 L75,35 L60,65 L40,65 Z" fill="none" stroke="url(#logoGrad)" stroke-width="2" />
+                    <g class="spin-fast" transform-origin="50% 45%">
+                         <path d="M50,38 L50,58 M40,48 L60,48 M43,41 L57,55 M57,41 L43,55" stroke="rgba(139, 92, 246, 0.5)" stroke-width="2" stroke-linecap="round" />
+                         <circle cx="50" cy="48" r="4" fill="none" stroke="url(#logoGrad)" stroke-width="2"/>
+                    </g>
+                </g>
+                <circle cx="50" cy="78" r="8" fill="url(#coreGrad)" class="pulse-core" />
+            </svg>
+            <span class="brand-text d-none d-sm-flex">Insight<span class="text-gradient-animated" style="margin-left: 2px;">Data</span><span class="thin">Miner</span></span>
+        </a>
+        <div class="ms-auto d-flex gap-3 align-items-center">
+            <span class="badge bg-opacity-10 rounded-pill px-3 py-2 fw-medium" style="background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);"><i class="fa-solid fa-robot me-2"></i>Module 3 Active</span>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 dashboard-container">
+        
+        {% if standby %}
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8 text-center" data-aos="zoom-in">
+                <div class="glass-card mt-5 py-5 d-flex flex-column align-items-center">
+                    <i class="fa-solid fa-brain fa-5x mb-4" style="color: #10b981; opacity: 0.8; filter: drop-shadow(0 0 15px rgba(16,185,129,0.5));"></i>
+                    <h2 class="fw-bold text-white mb-3">AI Engine on Standby</h2>
+                    <p class="text-muted mb-5 max-w-500 mx-auto">Upload a dataset or process one in Module 1 to let the AutoML Engine predict and evaluate models.</p>
+                    
+                    <div class="w-100 px-md-5">
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="upload-zone interactive-hover mb-4" onclick="document.getElementById('new-file').click();">
+                                <i class="fa-solid fa-cloud-arrow-up fa-3x mb-3" style="color: #10b981;"></i>
+                                <h6 class="fw-bold text-white">Upload Dataset for ML</h6>
+                                <p class="small text-muted m-0">.csv, .xlsx</p>
+                                <input type="file" id="new-file" name="new_dataset" accept=".csv, .xlsx, .xls" style="display: none;" onchange="this.form.submit()">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="row mb-4" data-aos="fade-down">
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-3 align-items-center bg-dark bg-opacity-25 border border-light border-opacity-10 rounded-4 p-3">
+                    <span class="fw-bold text-white me-auto"><i class="fa-solid fa-microchip text-success me-2"></i> AutoML Ready</span>
+                    <span class="badge bg-dark border border-secondary text-muted px-3 py-2"><i class="fa-solid fa-file-csv me-1"></i> {{ dataset_name }}</span>
+                    <span class="badge bg-dark border border-secondary text-muted px-3 py-2"><i class="fa-solid fa-list-ol me-1"></i> {{ total_rows }} Rows</span>
+                </div>
+                {% if error %}<div class="alert alert-danger mt-3 py-2 border-0 bg-danger bg-opacity-10 text-danger rounded-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>{{ error }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-xl-4 col-lg-5">
+                <div class="glass-card h-100" data-aos="fade-right">
+                    <h5 class="fw-bold mb-4 text-white"><i class="fa-solid fa-gears text-success me-2"></i> Engine Configuration</h5>
+                    
+                    <form method="POST" id="mlForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="run_automl">
+                        
+                        <div class="mb-4">
+                            <label class="small text-muted mb-2 fw-medium text-uppercase letter-spacing-1">1. Target Variable (Prediction Goal)</label>
+                            <select name="target_col" class="form-select interactive-hover shadow-none border-0 bg-dark" required>
+                                <option value="" disabled selected>Select the column to predict...</option>
+                                {% for col in all_cols %}
+                                    <option value="{{ col }}" {% if target_col == col %}selected{% endif %}>{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-5">
+                            <label class="small text-muted mb-2 fw-medium text-uppercase letter-spacing-1">2. Machine Learning Task</label>
+                            <select name="task_type" class="form-select interactive-hover shadow-none border-0 bg-dark" required>
+                                <option value="" disabled selected>Select Task Type...</option>
+                                <option value="classification" {% if task_type == 'Classification' %}selected{% endif %}>Classification (Predict Categories/Classes)</option>
+                                <option value="regression" {% if task_type == 'Regression' %}selected{% endif %}>Regression (Predict Numeric Values)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-glow-green interactive-hover" id="runBtn">
+                            <i class="fa-solid fa-bolt me-2"></i> Initialize Auto-Training
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-xl-8 col-lg-7">
+                <div class="glass-card h-100 d-flex flex-column" data-aos="fade-left">
+                    <h4 class="fw-bold mb-4 text-white"><i class="fa-solid fa-trophy text-warning me-2"></i> AI Evaluation Report</h4>
+                    
+                    {% if ml_results %}
+                        <div class="winner-card mb-4" data-aos="zoom-in" data-aos-delay="200">
+                            <h6 class="text-uppercase text-success fw-bold letter-spacing-2 mb-2">Best Performing Model</h6>
+                            <h2 class="display-5 fw-bold text-white mb-2">{{ best_model.model }}</h2>
+                            <h4 class="text-light m-0">Score: <span class="text-success fw-bold">{{ best_model.score }}%</span> <span class="fs-6 text-muted fw-normal">({{ metric_name }})</span></h4>
+                            <p class="small text-muted mt-3 mb-0">Task: {{ task_type }} | Target: {{ target_col }}</p>
+                        </div>
+
+                        <div class="row g-4 flex-grow-1">
+                            <div class="col-md-7">
+                                <div class="w-100 h-100 border border-light border-opacity-10 rounded-4 overflow-hidden bg-dark bg-opacity-25" style="min-height: 300px;">
+                                    {{ chart_html|safe }}
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-hover mb-0 align-middle border-light border-opacity-10">
+                                        <thead class="bg-dark bg-opacity-50 text-muted small">
+                                            <tr>
+                                                <th class="py-3">Algorithm</th>
+                                                <th class="py-3 text-end">{{ metric_name }}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for res in ml_results %}
+                                            <tr>
+                                                <td class="fw-medium {% if forloop.first %}text-success{% endif %}">
+                                                    {% if forloop.first %}<i class="fa-solid fa-crown me-1"></i>{% endif %}
+                                                    {{ res.model }}
+                                                </td>
+                                                <td class="text-end fw-bold">{{ res.score }}%</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center opacity-50 p-5 m-auto">
+                            <i class="fa-solid fa-network-wired fa-5x text-muted mb-4"></i>
+                            <h4 class="fw-bold text-white mb-2">Engine Awaiting Instructions</h4>
+                            <p class="small text-muted max-w-400 mx-auto">Select your target variable and task type on the left to allow the AI to evaluate multiple algorithms instantly.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <script>
+        AOS.init({ once: true, offset: 50 });
+        
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorRing = document.querySelector('.cursor-ring');
+        document.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px'; cursorDot.style.top = e.clientY + 'px';
+            cursorRing.style.left = e.clientX + 'px'; cursorRing.style.top = e.clientY + 'px';
+        });
+        document.querySelectorAll('a, button, select, input, .interactive-hover').forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+        });
+
+        const form = document.getElementById('mlForm');
+        const btn = document.getElementById('runBtn');
+        if(form && btn) {
+            form.addEventListener('submit', function() {
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin me-2"></i> Training AI Models...';
+                btn.style.opacity = '0.7';
+                btn.style.pointerEvents = 'none';
+            });
+        }
+
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { "value": 40, "density": { "enable": true, "value_area": 800 } },
+                "color": { "value": "#10b981" }, "shape": { "type": "circle" },
+                "opacity": { "value": 0.3, "random": false }, "size": { "value": 3, "random": true },
+                "line_linked": { "enable": true, "distance": 150, "color": "#34d399", "opacity": 0.15, "width": 1 }, 
+                "move": { "enable": true, "speed": 1, "direction": "none", "random": true, "out_mode": "out" }
+            },
+            "interactivity": {
+                "detect_on": "window",
+                "events": { "onhover": { "enable": true, "mode": "grab" } },
+                "modes": { "grab": { "distance": 200, "line_linked": { "opacity": 0.4 } } }
+            }, "retina_detect": true
+        });
+    </script>
+</body>
+</html>

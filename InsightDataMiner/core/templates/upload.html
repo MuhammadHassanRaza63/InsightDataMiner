@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsightDataMiner | No-Code Data Analysis</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        /* --- CORE THEME & CYBER CURSOR --- */
+        * { cursor: none !important; }
+        html { scroll-behavior: smooth; } /* Enables smooth scrolling */
+        body { 
+            font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; 
+            min-height: 100vh; position: relative; overflow-x: hidden; display: flex; flex-direction: column;
+        }
+        
+        /* Neon Scroll Progress Bar */
+        #scroll-progress { position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: linear-gradient(to right, #38bdf8, #8b5cf6); z-index: 10000; box-shadow: 0 0 15px #38bdf8, 0 0 30px #8b5cf6; border-radius: 0 5px 5px 0; transition: width 0.1s; }
+
+        /* Aurora Background */
+        body::before {
+            content: ""; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(56,189,248,0.12) 0%, rgba(139,92,246,0.12) 25%, transparent 50%);
+            animation: rotateAurora 30s linear infinite; z-index: -2;
+        }
+        @keyframes rotateAurora { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Particles Network Background */
+        #particles-js { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+        /* --- FUTURISTIC CUSTOM CURSOR --- */
+        .cursor-dot { position: fixed; top: 0; left: 0; width: 6px; height: 6px; background-color: #38bdf8; border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: width 0.1s, height 0.1s; box-shadow: 0 0 10px #38bdf8; }
+        .cursor-ring { position: fixed; top: 0; left: 0; width: 34px; height: 34px; border: 1.5px solid rgba(139, 92, 246, 0.6); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%, -50%); transition: width 0.2s, height 0.2s, background-color 0.2s, border-color 0.2s; box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); }
+        .cursor-hover .cursor-ring { width: 55px; height: 55px; background-color: rgba(56, 189, 248, 0.1); border-color: #38bdf8; }
+        .cursor-hover .cursor-dot { opacity: 0; }
+
+        /* --- NAVBAR & ULTRA-MODERN LOGO --- */
+        .navbar-custom { background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 15px 0; z-index: 1000; }
+        
+        .brand-logo-wrapper { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .modern-ai-logo { width: 45px; height: 45px; filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.6)); }
+        
+        /* Logo Animations */
+        .spin-slow { transform-origin: center; animation: spinLogo 8s linear infinite; }
+        .spin-fast-reverse { transform-origin: center; animation: spinReverseLogo 5s linear infinite; }
+        .pulse-core { transform-origin: center; animation: corePulse 2s ease-in-out infinite alternate; }
+        
+        @keyframes spinLogo { 100% { transform: rotate(360deg); } }
+        @keyframes spinReverseLogo { 100% { transform: rotate(-360deg); } }
+        @keyframes corePulse { 0% { transform: scale(0.7); opacity: 0.6; filter: drop-shadow(0 0 5px #38bdf8); } 100% { transform: scale(1.3); opacity: 1; filter: drop-shadow(0 0 20px #8b5cf6); } }
+
+        /* Logo Text Styling */
+        .brand-text { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; color: #ffffff; display: flex; align-items: center; }
+        .brand-text .thin { font-weight: 300; color: #94a3b8; letter-spacing: 0px; margin-left: 2px;}
+
+        /* --- PROFESSIONAL NAVBAR BUTTONS --- */
+        .btn-nav-login { color: #94a3b8; font-weight: 600; font-size: 0.95rem; padding: 8px 20px; border-radius: 50px; border: 1px solid transparent; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; }
+        .btn-nav-login:hover { color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.05); }
+        .btn-nav-signup { background: linear-gradient(135deg, #38bdf8, #8b5cf6); color: #ffffff !important; font-weight: 600; font-size: 0.95rem; padding: 8px 26px; border-radius: 50px; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25); border: 1px solid rgba(255, 255, 255, 0.1); display: inline-flex; align-items: center; }
+        .btn-nav-signup:hover { box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); transform: translateY(-2px); }
+
+        /* --- PREMIUM LOGGED-IN PILL --- */
+        .user-pill { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 50px; padding: 5px 5px 5px 20px; display: flex; align-items: center; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
+        .btn-logout-pill { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 50px; padding: 6px 18px; font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: 0.3s; border: 1px solid rgba(239, 68, 68, 0.2); margin-left: 15px; }
+        .btn-logout-pill:hover { background: #ef4444; color: white; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        
+        /* --- TECH TICKER --- */
+        .tech-ticker-wrap { overflow: hidden; white-space: nowrap; padding: 15px 0; background: rgba(2, 6, 23, 0.5); border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); margin-top: 85px; margin-bottom: 20px;}
+        .tech-ticker { display: inline-block; animation: ticker 30s linear infinite; }
+        .tech-item { display: inline-block; padding: 0 35px; font-size: 1.1rem; font-weight: 500; color: #64748b; filter: grayscale(100%) opacity(0.6); transition: all 0.3s ease; }
+        .tech-item i { margin-right: 8px; font-size: 1.3rem; vertical-align: middle; }
+        .tech-item:hover { filter: grayscale(0%) opacity(1); transform: scale(1.1); color: #38bdf8; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        /* --- HERO SECTION --- */
+        .hero-section { padding: 40px 0 30px; text-align: center; }
+        .hero-title { font-size: 4.8rem; font-weight: 800; letter-spacing: -1px; background: linear-gradient(to right, #ffffff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 25px; line-height: 1.1; }
+        @keyframes shine { to { background-position: 200% center; } }
+        .text-gradient-animated { background: linear-gradient(to right, #38bdf8, #8b5cf6, #38bdf8); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s linear infinite; }
+        .blinking-cursor { color: #8b5cf6; font-weight: 300; animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .hero-subtitle { font-size: 1.25rem; color: #94a3b8; max-width: 750px; margin: 0 auto; line-height: 1.6;}
+
+        /* --- IMPACT COUNTERS --- */
+        .counter-section { padding: 20px 0 50px; }
+        .counter-box { padding: 20px; border-right: 1px solid rgba(255,255,255,0.05); }
+        .counter-box:last-child { border: none; }
+        .counter-number { font-size: 3.5rem; font-weight: 800; margin-bottom: 5px; }
+        .counter-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; font-weight: 600; }
+
+        /* --- 3D TILT CARDS --- */
+        .glass-card { position: relative; background: rgba(30, 41, 59, 0.3); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 40px 30px; height: 100%; text-align: left; overflow: hidden; transition: border-color 0.4s, background 0.4s; }
+        .glass-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(56, 189, 248, 0.15), transparent 40%); z-index: 0; pointer-events: none; opacity: 0; transition: opacity 0.3s ease; }
+        .glass-card:hover::before { opacity: 1; }
+        .glass-card > * { position: relative; z-index: 1; transform: translateZ(30px); } 
+        .glass-card:hover { border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5); background: rgba(30, 41, 59, 0.6); }
+        
+        .module-icon-wrapper { width: 65px; height: 65px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; font-size: 26px; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
+        .mod-1-icon { background: rgba(56, 189, 248, 0.1); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);}
+        .mod-2-icon { background: rgba(168, 85, 247, 0.1); color: #c084fc; border-color: rgba(168, 85, 247, 0.3); box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);}
+        .mod-3-icon { background: rgba(16, 185, 129, 0.1); color: #34d399; border-color: rgba(16, 185, 129, 0.3); box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);}
+        .module-title { font-weight: 700; font-size: 1.4rem; margin-bottom: 15px; color: white; letter-spacing: -0.5px;}
+        .module-desc { color: #94a3b8; margin-bottom: 35px; line-height: 1.7; font-size: 0.95rem; }
+
+        /* --- MAGNETIC BUTTONS --- */
+        .magnetic-btn-wrap { display: inline-block; padding: 20px; margin: -20px; }
+        .btn-glow { background: linear-gradient(135deg, #38bdf8, #8b5cf6); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; letter-spacing: 0.5px; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s; position: relative; overflow: hidden; width: 100%; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; z-index: 2;}
+        .btn-glow::after { content: ""; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent); transform: skewX(-20deg); transition: 0.5s; }
+        .btn-glow:hover::after { left: 150%; }
+        .btn-glow:hover { box-shadow: 0 10px 30px rgba(139, 92, 246, 0.6); color: white;}
+        .btn-locked { background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #64748b; padding: 12px 24px; border-radius: 12px; font-weight: 600; width: 100%; pointer-events: none;}
+
+        /* --- CYBER GRID TERMINAL --- */
+        .terminal-section { padding: 80px 0 100px; position: relative; z-index: 1; overflow: hidden; }
+        .terminal-section::before {
+            content: ''; position: absolute; bottom: -50%; left: -50%; width: 200%; height: 150%;
+            background-image: linear-gradient(rgba(56, 189, 248, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.2) 1px, transparent 1px);
+            background-size: 40px 40px; transform: perspective(600px) rotateX(75deg); transform-origin: center top; z-index: -2;
+            animation: gridMove 10s linear infinite;
+        }
+        @keyframes gridMove { 0% { transform: perspective(600px) rotateX(75deg) translateY(0); } 100% { transform: perspective(600px) rotateX(75deg) translateY(40px); } }
+        .terminal-section::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, #020617 0%, transparent 40%, #020617 100%); z-index: -1; pointer-events: none;
+        }
+
+        .terminal-window { position: relative; width: 80%; max-width: 800px; margin: 0 auto; background: #0f172a; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 30px rgba(56,189,248,0.2); overflow: hidden; font-family: 'Fira Code', monospace; text-align: left; z-index: 2; }
+        .terminal-header { background: #1e293b; padding: 12px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .terminal-btn { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .btn-red { background: #ef4444; } .btn-yellow { background: #f59e0b; } .btn-green { background: #10b981; }
+        .terminal-title { margin-left: auto; margin-right: auto; color: #94a3b8; font-size: 0.9rem; }
+        .terminal-body { padding: 25px; color: #38bdf8; font-size: 0.95rem; line-height: 1.6; }
+        .code-line { display: block; white-space: nowrap; overflow: hidden; width: 0; animation: typing 3s steps(40, end) forwards; }
+        .comment { color: #64748b; } .keyword { color: #c084fc; } .string { color: #10b981; } .function { color: #fbbf24; }
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        .delay-1 { animation-delay: 0.5s; } .delay-2 { animation-delay: 2s; } .delay-3 { animation-delay: 3.5s; } .delay-4 { animation-delay: 5s; } .delay-5 { animation-delay: 6.5s; }
+        
+        .hover-info:hover { color: #38bdf8 !important; margin-left: 5px; transition: 0.3s; }
+    </style>
+</head>
+<body>
+
+    <div id="scroll-progress"></div>
+    <div id="particles-js"></div>
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+
+    <nav class="navbar navbar-expand-lg navbar-custom fixed-top px-4" data-aos="fade-down" data-aos-duration="1000">
+        <div class="container-fluid max-w-1200">
+            <a class="brand-logo-wrapper interactive-hover" href="{% url 'home' %}">
+                <svg class="modern-ai-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#38bdf8" />
+                            <stop offset="100%" stop-color="#8b5cf6" />
+                        </linearGradient>
+                        <linearGradient id="coreGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#8b5cf6" />
+                            <stop offset="100%" stop-color="#38bdf8" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="50" cy="50" r="44" stroke="url(#logoGrad)" stroke-width="2" fill="none" stroke-dasharray="15 10" class="spin-slow" />
+                    <polygon points="50,15 80,32 80,68 50,85 20,68 20,32" stroke="url(#logoGrad)" stroke-width="2.5" fill="rgba(139, 92, 246, 0.15)" class="spin-fast-reverse" />
+                    <circle cx="50" cy="50" r="12" fill="url(#coreGrad)" class="pulse-core" />
+                </svg>
+                <span class="brand-text">Insight<span class="text-gradient-animated">Data</span><span class="thin">Miner</span></span>
+            </a>
+            
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="fa-solid fa-bars text-info"></i>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-3">
+                    <li class="nav-item">
+                        <a class="nav-link text-light opacity-75 interactive-hover fw-medium" href="#" style="transition: 0.3s;" onmouseover="this.style.opacity='1'; this.style.color='#38bdf8'" onmouseout="this.style.opacity='0.75'; this.style.color='white'">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light opacity-75 interactive-hover fw-medium" href="#modules-section" style="transition: 0.3s;" onmouseover="this.style.opacity='1'; this.style.color='#38bdf8'" onmouseout="this.style.opacity='0.75'; this.style.color='white'">Platform Modules</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light opacity-75 interactive-hover fw-medium" href="#how-it-works" style="transition: 0.3s;" onmouseover="this.style.opacity='1'; this.style.color='#38bdf8'" onmouseout="this.style.opacity='0.75'; this.style.color='white'">Engine Logic</a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center mt-3 mt-lg-0 gap-3">
+                    {% if user.is_authenticated %}
+                        <div class="user-pill d-none d-md-flex">
+                            <span class="text-light small"><i class="fa-solid fa-circle-user text-info me-2 fs-6 align-middle"></i><span class="opacity-75">Welcome,</span> <strong class="text-white ms-1">{{ user.username }}</strong></span>
+                            <a href="{% url 'logout' %}" class="btn-logout-pill interactive-hover">Logout <i class="fa-solid fa-arrow-right-from-bracket ms-1"></i></a>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn-nav-login interactive-hover"><i class="fa-solid fa-lock-open me-2 opacity-50 small"></i> Log In</a>
+                        <a href="{% url 'signup' %}" class="btn-nav-signup interactive-hover">Get Started <i class="fa-solid fa-arrow-right ms-2 small"></i></a>
+                    {% endif %}
+                    
+                    <div class="vr bg-secondary opacity-25 mx-1 d-none d-lg-block" style="width: 2px; height: 30px;"></div>
+                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-2 fw-medium shadow-sm d-none d-lg-block"><i class="fa-solid fa-bolt me-2"></i>No-Code AI</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="tech-ticker-wrap" data-aos="fade-in" data-aos-duration="1500">
+        <div class="tech-ticker">
+            <span class="tech-item"><i class="fa-brands fa-python"></i> Python</span>
+            <span class="tech-item"><i class="fa-solid fa-database"></i> Pandas</span>
+            <span class="tech-item"><i class="fa-solid fa-brain"></i> PyCaret</span>
+            <span class="tech-item"><i class="fa-brands fa-docker"></i> Django</span>
+            <span class="tech-item"><i class="fa-solid fa-chart-simple"></i> Plotly</span>
+            <span class="tech-item"><i class="fa-solid fa-server"></i> PostgreSQL</span>
+            <span class="tech-item"><i class="fa-brands fa-python"></i> Python</span>
+            <span class="tech-item"><i class="fa-solid fa-database"></i> Pandas</span>
+            <span class="tech-item"><i class="fa-solid fa-brain"></i> PyCaret</span>
+            <span class="tech-item"><i class="fa-brands fa-docker"></i> Django</span>
+        </div>
+    </div>
+
+    <header class="container hero-section" data-aos="zoom-in" data-aos-duration="1200">
+        <h1 class="hero-title">Effortless Data Intelligence with<br>
+            <span class="text-gradient-animated" id="typed-text"></span><span class="blinking-cursor">|</span>
+        </h1>
+        <p class="hero-subtitle">The ultimate end-to-end data analysis platform designed for beginners. From raw messy data to smart visualizations and AutoML suggestions—no coding experience required.</p>
+    </header>
+
+    <section class="container counter-section">
+        <div class="row text-center" data-aos="fade-up" data-aos-delay="200">
+            <div class="col-md-4 counter-box">
+                <div class="counter-number text-gradient-animated"><span class="count-up" data-target="0">0</span></div>
+                <div class="counter-label">Lines of Code Needed</div>
+            </div>
+            <div class="col-md-4 counter-box">
+                <div class="counter-number text-gradient-animated"><span class="count-up" data-target="100">0</span>%</div>
+                <div class="counter-label">Beginner Friendly</div>
+            </div>
+            <div class="col-md-4 counter-box">
+                <div class="counter-number text-gradient-animated"><span class="count-up" data-target="3">0</span></div>
+                <div class="counter-label">Intelligent Modules</div>
+            </div>
+        </div>
+    </section>
+
+    <div id="modules-section" class="container mb-5 mt-4">
+        <div class="row g-5">
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="glass-card spotlight-card interactive-hover" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
+                    <div class="module-icon-wrapper mod-1-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <h3 class="module-title">Smart Data Preprocessing</h3>
+                    <p class="module-desc">Upload raw CSV/Excel files and let our engine do the heavy lifting. Automatically clean missing values, handle outliers, and encode features instantly.</p>
+                    <div class="magnetic-btn-wrap">
+                        <a href="{% url 'module1' %}" class="btn-glow magnetic-btn interactive-hover">Start Preprocessing <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                <div class="glass-card spotlight-card interactive-hover" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
+                    <div class="module-icon-wrapper mod-2-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                    <h3 class="module-title">Visual Analytics Dashboard</h3>
+                    <p class="module-desc">Turn boring numbers into stunning interactive graphs. Instantly uncover trends, distributions, and correlations to understand your data's hidden story.</p>
+                    <div class="magnetic-btn-wrap">
+                        <a href="{% url 'module2' %}" class="btn-glow magnetic-btn interactive-hover">Launch Analytics <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+                <div class="glass-card spotlight-card interactive-hover" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
+                    <div class="module-icon-wrapper mod-3-icon"><i class="fa-solid fa-robot"></i></div>
+                    <h3 class="module-title">AutoML Model Suggestions</h3>
+                    <p class="module-desc">Step into predictive AI effortlessly. Our system automatically evaluates your dataset and recommends the most accurate Machine Learning models for your task.</p>
+                    <div class="magnetic-btn-wrap">
+                        <a href="{% url 'module3' %}" class="btn-glow magnetic-btn interactive-hover" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">Launch AutoML <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <section id="how-it-works" class="terminal-section text-center" data-aos="fade-up" data-aos-offset="200">
+        <div class="container interactive-hover">
+            <p class="text-uppercase letter-spacing-2 text-info mb-3 fw-bold small opacity-75">Built for Beginners, Powered by Advanced AI</p>
+            <h2 class="fw-bold text-white mb-5 position-relative z-1">Behind the Scenes: The Smart Engine</h2>
+            
+            <div class="terminal-window">
+                <div class="terminal-header">
+                    <span class="terminal-btn btn-red"></span><span class="terminal-btn btn-yellow"></span><span class="terminal-btn btn-green"></span>
+                    <span class="terminal-title fw-medium"><i class="fa-solid fa-terminal me-2"></i>no_code_pipeline.py</span>
+                </div>
+                <div class="terminal-body">
+                    <span class="code-line comment"># Initializing InsightDataMiner No-Code Engine...</span>
+                    <span class="code-line delay-1"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span>
+                    <span class="code-line delay-1"><span class="keyword">from</span> auto_ml_core <span class="keyword">import</span> *</span>
+                    <br>
+                    <span class="code-line delay-2 comment"># Executing 1-Click Data Pipeline</span>
+                    <span class="code-line delay-3">$ data = <span class="function">auto_clean_and_preprocess</span>(<span class="string">'user_dataset.csv'</span>)</span>
+                    <span class="code-line delay-4">$ <span class="function">generate_visual_dashboard</span>(data)</span>
+                    <span class="code-line delay-5">$ <span class="function">suggest_best_ml_models</span>(data, goal=<span class="string">'prediction'</span>)</span>
+                    <br>
+                    <span class="code-line delay-5 text-success">>> Pipeline Completed Successfully. Insights Ready for User!</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="mt-auto border-top border-light border-opacity-10 bg-dark bg-opacity-25 pt-5 pb-3">
+        <div class="container">
+            <div class="row gy-4 mb-4">
+                <div class="col-lg-4 col-md-6">
+                    <a class="brand-logo-wrapper text-decoration-none mb-3 d-inline-flex" href="#">
+                        <svg class="modern-ai-logo" style="width: 30px; height: 30px;" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="44" stroke="#38bdf8" stroke-width="2" fill="none" stroke-dasharray="15 10" />
+                            <circle cx="50" cy="50" r="12" fill="#8b5cf6" />
+                        </svg>
+                        <span class="brand-text text-white ms-2" style="font-size: 1.2rem;">Insight<span class="text-gradient-animated">Data</span><span class="thin">Miner</span></span>
+                    </a>
+                    <p class="small text-muted mb-3 pe-lg-5">The ultimate No-Code AI platform for automated data preprocessing, visual analytics, and machine learning suggestions.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-muted interactive-hover" style="transition: 0.3s;" onmouseover="this.style.color='#38bdf8'" onmouseout="this.style.color='#6c757d'"><i class="fa-brands fa-twitter fs-5"></i></a>
+                        <a href="#" class="text-muted interactive-hover" style="transition: 0.3s;" onmouseover="this.style.color='#8b5cf6'" onmouseout="this.style.color='#6c757d'"><i class="fa-brands fa-github fs-5"></i></a>
+                        <a href="#" class="text-muted interactive-hover" style="transition: 0.3s;" onmouseover="this.style.color='#10b981'" onmouseout="this.style.color='#6c757d'"><i class="fa-brands fa-linkedin fs-5"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="text-white fw-bold mb-3">Platform</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="#modules-section" class="text-muted text-decoration-none interactive-hover hover-info">Data Preprocessing</a></li>
+                        <li class="mb-2"><a href="#modules-section" class="text-muted text-decoration-none interactive-hover hover-info">Visual Analytics</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none interactive-hover hover-info">AutoML Models <span class="badge bg-purple bg-opacity-10 text-purple border border-purple border-opacity-25 rounded-pill ms-1" style="font-size: 0.6rem; color:#c084fc; border-color:#c084fc!important;">Soon</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="text-white fw-bold mb-3">Resources</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none interactive-hover hover-info">Documentation</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none interactive-hover hover-info">API Reference</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none interactive-hover hover-info">Community Forum</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="text-white fw-bold mb-3">Company</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none interactive-hover hover-info">About Us</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none interactive-hover hover-info">Privacy Policy</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none interactive-hover hover-info">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-top border-light border-opacity-10 pt-3 d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <p class="small text-muted mb-0">&copy; 2026 InsightDataMiner. Built for Beginners, Powered by AI.</p>
+                <div class="small text-muted mt-2 mt-md-0">
+                    <i class="fa-solid fa-circle text-success me-1" style="font-size: 0.5rem; vertical-align: middle;"></i> All systems operational
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <script>
+        // Scroll Animations & Progress Bar
+        AOS.init({ once: true, offset: 50 });
+        window.onscroll = function() {
+            var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            var scrolled = (winScroll / height) * 100;
+            document.getElementById("scroll-progress").style.width = scrolled + "%";
+        };
+
+        // Typing Effect
+        const typedTextSpan = document.getElementById("typed-text");
+        const words = ["Zero Coding.", "Automated Cleaning.", "Smart Visualizations.", "AutoML Suggestions."];
+        let wordIndex = 0; let charIndex = 0; let isDeleting = false;
+        function type() {
+            const currentWord = words[wordIndex];
+            if (isDeleting) {
+                typedTextSpan.textContent = currentWord.substring(0, charIndex - 1); charIndex--;
+            } else {
+                typedTextSpan.textContent = currentWord.substring(0, charIndex + 1); charIndex++;
+            }
+            let typingSpeed = isDeleting ? 40 : 100;
+            if (!isDeleting && charIndex === currentWord.length) {
+                typingSpeed = 2000; isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false; wordIndex = (wordIndex + 1) % words.length; typingSpeed = 500;
+            }
+            setTimeout(type, typingSpeed);
+        }
+        document.addEventListener("DOMContentLoaded", type);
+
+        // Magnetic Button
+        const magnets = document.querySelectorAll('.magnetic-btn');
+        magnets.forEach(magnet => {
+            magnet.addEventListener('mousemove', function(e) {
+                const rect = magnet.getBoundingClientRect();
+                const h = rect.width / 2; const v = rect.height / 2;
+                const x = e.clientX - rect.left - h; const y = e.clientY - rect.top - v;
+                magnet.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
+            });
+            magnet.addEventListener('mouseleave', function() {
+                magnet.style.transform = 'translate(0px, 0px)';
+            });
+        });
+
+        // Neural Network Background
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { "value": 50, "density": { "enable": true, "value_area": 800 } },
+                "color": { "value": "#8b5cf6" }, "shape": { "type": "circle" },
+                "opacity": { "value": 0.4, "random": false }, "size": { "value": 3, "random": true },
+                "line_linked": { "enable": true, "distance": 150, "color": "#38bdf8", "opacity": 0.2, "width": 1 }, 
+                "move": { "enable": true, "speed": 1.5, "direction": "none", "random": true, "out_mode": "out" }
+            },
+            "interactivity": {
+                "detect_on": "window",
+                "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" } },
+                "modes": { "grab": { "distance": 200, "line_linked": { "opacity": 0.5 } }, "push": { "particles_nb": 4 } }
+            }, "retina_detect": true
+        });
+
+        // Futuristic Custom Cursor
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorRing = document.querySelector('.cursor-ring');
+        document.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px'; cursorDot.style.top = e.clientY + 'px';
+            cursorRing.style.left = e.clientX + 'px'; cursorRing.style.top = e.clientY + 'px';
+        });
+        document.querySelectorAll('a, button, .interactive-hover').forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+        });
+
+        // Spotlight Effect
+        document.querySelectorAll('.spotlight-card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left; const y = e.clientY - rect.top;  
+                card.style.setProperty('--x', `${x}px`); card.style.setProperty('--y', `${y}px`);
+            });
+        });
+
+        // Animated Counters
+        const counters = document.querySelectorAll('.count-up');
+        const counterObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    const counter = entry.target;
+                    const target = +counter.getAttribute('data-target');
+                    const updateCount = () => {
+                        const count = +counter.innerText;
+                        const inc = target / 100;
+                        if (count < target) {
+                            counter.innerText = Math.ceil(count + inc);
+                            setTimeout(updateCount, 20);
+                        } else { counter.innerText = target; }
+                    };
+                    updateCount();
+                    observer.unobserve(counter);
+                }
+            });
+        }, { threshold: 0.5 });
+        counters.forEach(counter => counterObserver.observe(counter));
+    </script>
+</body>
+</html>
