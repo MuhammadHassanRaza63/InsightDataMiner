@@ -67,7 +67,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'insightdataminer_db',  
         'USER': 'postgres',   
-        'PASSWORD': 'Admin@321',
+        'PASSWORD': 'Enter password of Database',
         'HOST': 'localhost',
         'PORT': '5432',
     }
