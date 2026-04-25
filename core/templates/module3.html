@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <script>
+        let match = document.cookie.match(new RegExp('(^| )idm_theme=([^;]+)'));
+        let theme = match ? match[2] : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+    </script>
+    <meta charset="UTF-8">
+    <title>AutoML Engine | InsightDataMiner</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; min-height: 100vh; padding-bottom: 50px; transition: 0.3s;}
+        body::before { content: ""; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, rgba(59,130,246,0.1) 25%, transparent 50%); z-index: -2; }
+        .navbar-custom { background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 15px 0; z-index: 1000;}
+        .glass-card { background: rgba(30, 41, 59, 0.3); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 25px; margin-bottom: 20px; box-shadow: 0 8px 32px 0 rgba(0,0,0,0.37); }
+        .upload-zone { border: 2px dashed rgba(16, 185, 129, 0.4); border-radius: 15px; padding: 30px; background: rgba(15, 23, 42, 0.3); text-align: center; cursor: pointer;}
+        .form-select, .form-control { background-color: rgba(15, 23, 42, 0.6) !important; color: #f8fafc !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 12px; }
+        .btn-glow { background: linear-gradient(135deg, #10b981, #3b82f6); color: white; border: none; padding: 14px 24px; border-radius: 12px; font-weight: 700; width: 100%; transition: 0.3s; }
+        
+        /* 🌟 AI LOADER CSS 🌟 */
+        .ai-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2,6,23,0.9); backdrop-filter: blur(10px); z-index: 99999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .ai-loader.active { opacity: 1; pointer-events: all; }
+
+        [data-theme="light"] body { background-color: #ffffff; color: #0f172a; } [data-theme="light"] body::before { opacity: 0; }
+        [data-theme="light"] .navbar-custom { background: rgba(255, 255, 255, 0.9); border-bottom: 1px solid #e2e8f0; }
+        [data-theme="light"] .text-white { color: #0f172a !important; } [data-theme="light"] .text-muted { color: #64748b !important; }
+        [data-theme="light"] .bg-dark { background-color: #f8fafc !important; }
+        [data-theme="light"] .glass-card { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        [data-theme="hybrid"] body { background-color: #f1f5f9; color: #0f172a; } [data-theme="hybrid"] body::before { opacity: 0; }
+        [data-theme="hybrid"] .navbar-custom { background: rgba(248, 250, 252, 0.8); border-bottom: 1px solid rgba(56, 189, 248, 0.2); }
+        [data-theme="hybrid"] .text-white { color: #0f172a !important; } [data-theme="hybrid"] .text-muted { color: #475569 !important; }
+        [data-theme="hybrid"] .bg-dark { background-color: #ffffff !important; }
+        [data-theme="hybrid"] .glass-card { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(16px); border-color: rgba(56, 189, 248, 0.3); }
+    </style>
+</head>
+<body>
+
+    <div id="ai-loader" class="ai-loader">
+        <div class="text-center">
+            <i class="fa-solid fa-brain fa-spin fa-4x text-success mb-3"></i>
+            <h3 class="fw-bold text-white mb-2">Training AI Models...</h3>
+            <p class="text-success small">Evaluating algorithms to find the best fit.</p>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-custom fixed-top px-4" data-aos="fade-down" data-aos-duration="800">
+        <a class="text-decoration-none fw-bold text-white fs-4" href="{% url 'home' %}">Insight<span style="color:#38bdf8;">Data</span><span class="fw-light text-muted">Miner</span></a>
+        <div class="ms-auto d-flex gap-3 align-items-center">
+            <div class="dropdown me-3">
+                <button class="btn btn-sm btn-outline-info rounded-pill px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown">Theme</button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="background: rgba(15,23,42,0.95); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <li><a class="dropdown-item text-light" href="#" onclick="setTheme('dark')">Dark</a></li>
+                    <li><a class="dropdown-item text-light" href="#" onclick="setTheme('light')">Light</a></li>
+                    <li><a class="dropdown-item text-light" href="#" onclick="setTheme('hybrid')">Hybrid</a></li>
+                </ul>
+            </div>
+            <span class="badge px-3 py-2 fw-medium" style="background: rgba(16,185,129,0.1); color:#10b981; border: 1px solid rgba(16,185,129,0.4); border-radius: 50px;">Module 3 Active</span>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 mt-5 pt-5">
+        {% if standby %}
+        <div class="row justify-content-center">
+            <div class="col-lg-6 text-center" data-aos="zoom-in">
+                <div class="glass-card py-5 d-flex flex-column align-items-center">
+                    <i class="fa-solid fa-network-wired fa-4x text-muted mb-4"></i>
+                    <h2 class="fw-bold text-white mb-3">Initialize AI Engine</h2>
+                    <form method="POST" enctype="multipart/form-data" class="w-100 px-md-5" onsubmit="showLoader()">
+                        {% csrf_token %}
+                        <div class="upload-zone mb-4" onclick="document.getElementById('new-file').click();">
+                            <i class="fa-solid fa-cloud-arrow-up fa-3x text-success mb-3"></i>
+                            <h6 class="fw-bold text-white">Upload Training Data</h6>
+                            <input type="file" id="new-file" name="new_dataset" style="display: none;" onchange="this.form.submit()">
+                        </div>
+                    </form>
+                    
+                    <div class="w-100 px-md-5">
+                        <div class="d-flex align-items-center my-3"><hr class="flex-grow-1 border-secondary"><span class="mx-3 text-muted small fw-bold">OR</span><hr class="flex-grow-1 border-secondary"></div>
+                        <form method="POST" onsubmit="showLoader()">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="load_sample">
+                            <button type="submit" class="btn btn-outline-info w-100 rounded-pill fw-bold"><i class="fa-solid fa-flask me-2"></i> Load Sample Data (Titanic)</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="row mb-3" data-aos="fade-down">
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-3 align-items-center bg-dark bg-opacity-25 border border-light border-opacity-10 rounded-4 p-3">
+                    <span class="fw-bold text-white"><i class="fa-solid fa-database text-success me-2"></i> Ready for AutoML</span>
+                    {% if dataset_name %}<span class="badge bg-secondary bg-opacity-25 border text-light"><i class="fa-solid fa-file-csv me-1"></i> {{ dataset_name }}</span>{% endif %}
+                    <form method="POST" enctype="multipart/form-data" class="ms-auto" onsubmit="showLoader()">
+                        {% csrf_token %}
+                        <input type="file" id="quick-upload" name="new_dataset" style="display: none;" onchange="this.form.submit()">
+                        <button type="button" class="btn btn-sm btn-outline-secondary text-light rounded-pill px-3" onclick="document.getElementById('quick-upload').click();">Change File</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-xl-3 col-lg-4">
+                <div class="glass-card h-100" data-aos="fade-right">
+                    <h5 class="fw-bold text-white mb-4"><i class="fa-solid fa-gears text-success me-2"></i> Model Config</h5>
+                    <form method="POST" id="mlForm" onsubmit="showLoader()">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="run_automl">
+                        <select name="target_col" class="form-select mb-4" required>
+                            <option value="" disabled selected>Select Prediction Target...</option>
+                            {% for col in all_cols %}<option value="{{ col }}" {% if target_col == col %}selected{% endif %}>{{ col }}</option>{% endfor %}
+                        </select>
+                        <select name="task_type" class="form-select mb-4" required>
+                            <option value="" disabled selected>Select AI Task...</option>
+                            <option value="classification" {% if task_type == 'Classification' %}selected{% endif %}>Classification</option>
+                            <option value="regression" {% if task_type == 'Regression' %}selected{% endif %}>Regression</option>
+                        </select>
+                        <button type="submit" class="btn btn-glow py-3"><i class="fa-solid fa-bolt me-2"></i> Train AI Models</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-xl-9 col-lg-8">
+                {% if best_model %}
+                <div data-aos="fade-left">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="p-3 rounded-3" style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981;">
+                            <h6 class="text-success small m-0">Winning Algorithm</h6>
+                            <h4 class="text-white fw-bold m-0">{{ best_model.model }} <span class="ms-2 fs-5">| {{ best_model.score }}%</span></h4>
+                        </div>
+                        <form method="POST" class="m-0" data-no-loader="true">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="download_model">
+                            <button type="submit" class="btn btn-outline-success rounded-pill px-4 py-2"><i class="fa-solid fa-download me-2"></i> Export Model (.pkl)</button>
+                        </form>
+                    </div>
+                    {% if fit_suggestion %}
+                    <div class="glass-card mb-4 p-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25);">
+                        <h6 class="text-white mb-2">Model Guidance</h6>
+                        <p class="text-muted mb-0">{{ fit_suggestion }}</p>
+                    </div>
+                    {% endif %}
+                    {% if fit_diagnostics %}
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6 col-lg-3"><div class="kpi-box"><span class="small text-muted">Train Score</span><h4 class="fw-bold mb-0">{{ fit_diagnostics.train_score }}%</h4></div></div>
+                        <div class="col-sm-6 col-lg-3"><div class="kpi-box"><span class="small text-muted">Test Score</span><h4 class="fw-bold mb-0">{{ fit_diagnostics.test_score }}%</h4></div></div>
+                        <div class="col-sm-6 col-lg-3"><div class="kpi-box"><span class="small text-muted">CV Mean</span><h4 class="fw-bold mb-0">{{ fit_diagnostics.cv_score }}%</h4></div></div>
+                        <div class="col-sm-6 col-lg-3"><div class="kpi-box"><span class="small text-muted">CV Std</span><h4 class="fw-bold mb-0">{{ fit_diagnostics.cv_std }}%</h4></div></div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-lg-6"><div class="glass-card p-2 m-0 h-100">{{ chart_comp_html|safe }}</div></div>
+                        <div class="col-lg-6"><div class="glass-card p-2 m-0 h-100">{{ chart_cm_html|safe }}</div></div>
+                        <div class="col-12"><div class="glass-card p-2 m-0">{{ chart_fi_html|safe }}</div></div>
+                    </div>
+
+                    <div class="glass-card p-4 border border-success border-opacity-25" style="background: rgba(16,185,129,0.05);">
+                        <div class="row align-items-center">
+                            <div class="col-md-7">
+                                <h4 class="fw-bold text-white mb-3">Live Prediction Sandbox</h4>
+                                <form id="livePredictionForm" class="row g-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="predict">
+                                    {% for feature in prediction_features %}
+                                    <div class="col-sm-6">
+                                        <label class="small text-light mb-1">{{ feature.name }}</label>
+                                        {% if feature.type == 'categorical' %}
+                                            <select name="{{ feature.name }}" class="form-select form-select-sm" required>
+                                                {% if feature.suggested %}<option value="" disabled selected>Suggested: {{ feature.suggested }}</option>{% endif %}
+                                                {% for opt in feature.options %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}
+                                            </select>
+                                        {% else %}
+                                            <input type="number" step="any" name="{{ feature.name }}" class="form-control form-control-sm" placeholder="{{ feature.suggested }}" required>
+                                        {% endif %}
+                                        {% if feature.suggested %}
+                                        <div class="small text-muted mt-1">Suggested value: {{ feature.suggested }}</div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                    <div class="col-12 mt-3"><button type="button" onclick="runLivePrediction()" class="btn btn-success btn-sm w-100 fw-bold py-2">Test Live Prediction</button></div>
+                                </form>
+                            </div>
+                            <div class="col-md-5 text-center mt-4 mt-md-0">
+                                <div id="predictionResultBox" class="p-4 rounded-3 border border-success border-opacity-25" style="background: #020617; opacity: 0.8;">
+                                    <i class="fa-solid fa-bullseye fa-3x text-success mb-3" id="predIcon"></i>
+                                    <h6 class="text-muted text-uppercase small m-0">Predicted {{ target_col }}</h6>
+                                    <h2 class="text-white fw-bold mt-2 mb-0" id="predValue">---</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <script>
+        AOS.init(); function setTheme(t) { document.cookie = "idm_theme=" + t + "; path=/; max-age=31536000"; window.location.reload(); }
+        function showLoader() { document.getElementById('ai-loader').classList.add('active'); }
+        
+        // 🌟 SWEET ALERTS 🌟
+        document.addEventListener("DOMContentLoaded", function() {
+            const isD = document.documentElement.getAttribute('data-theme') !== 'light';
+            {% if success_msg %} Swal.fire({ title: 'Success!', text: '{{ success_msg }}', icon: 'success', background: isD ? '#0f172a' : '#fff', color: isD ? '#fff' : '#000', confirmButtonColor: '#10b981' }); {% endif %}
+            {% if error %} Swal.fire({ title: 'Error!', text: '{{ error }}', icon: 'error', background: isD ? '#0f172a' : '#fff', color: isD ? '#fff' : '#000', confirmButtonColor: '#ef4444' }); {% endif %}
+        });
+
+        function runLivePrediction() {
+            const f = document.getElementById('livePredictionForm');
+            if(!f.checkValidity()) { f.reportValidity(); return; }
+            document.getElementById('predValue').innerText = 'Calculating...';
+            fetch(window.location.href, { method: 'POST', body: new FormData(f), headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json()).then(d => {
+                if(d.status === 'success') { document.getElementById('predValue').innerHTML = `<span class="text-success">${d.prediction}</span>`; } 
+                else { document.getElementById('predValue').innerHTML = `<span class="fs-6 text-danger">${d.message}</span>`; }
+            });
+        }
+    </script>
+</body>
+</html>

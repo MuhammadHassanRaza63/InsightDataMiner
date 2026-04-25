@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <script>
+        let match = document.cookie.match(new RegExp('(^| )idm_theme=([^;]+)'));
+        let theme = match ? match[2] : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsightDataMiner | No-Code Data Analysis</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; 
+            min-height: 100vh; position: relative; overflow-x: hidden; display: flex; flex-direction: column; transition: 0.3s;
+        }
+        
+        #scroll-progress { position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: linear-gradient(to right, #38bdf8, #8b5cf6); z-index: 10000; box-shadow: 0 0 15px #38bdf8, 0 0 30px #8b5cf6; border-radius: 0 5px 5px 0; transition: width 0.1s; }
+        body::before {
+            content: ""; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(56,189,248,0.12) 0%, rgba(139,92,246,0.12) 25%, transparent 50%);
+            animation: rotateAurora 30s linear infinite; z-index: -2;
+        }
+        @keyframes rotateAurora { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #particles-js { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+        .navbar-custom { background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 15px 0; z-index: 1000; transition: 0.3s;}
+        .brand-logo-wrapper { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .modern-ai-logo { width: 45px; height: 45px; filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.6)); }
+        
+        .spin-slow { transform-origin: center; animation: spinLogo 8s linear infinite; }
+        .spin-fast-reverse { transform-origin: center; animation: spinReverseLogo 5s linear infinite; }
+        .pulse-core { transform-origin: center; animation: corePulse 2s ease-in-out infinite alternate; }
+        @keyframes spinLogo { 100% { transform: rotate(360deg); } }
+        @keyframes spinReverseLogo { 100% { transform: rotate(-360deg); } }
+        @keyframes corePulse { 0% { transform: scale(0.7); opacity: 0.6; filter: drop-shadow(0 0 5px #38bdf8); } 100% { transform: scale(1.3); opacity: 1; filter: drop-shadow(0 0 20px #8b5cf6); } }
+
+        .brand-text { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; color: #ffffff; display: flex; align-items: center; }
+        .brand-text .thin { font-weight: 300; color: #94a3b8; letter-spacing: 0px; margin-left: 2px;}
+
+        .btn-nav-login { color: #94a3b8; font-weight: 600; font-size: 0.95rem; padding: 8px 20px; border-radius: 50px; border: 1px solid transparent; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; }
+        .btn-nav-login:hover { color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.05); }
+        .btn-nav-signup { background: linear-gradient(135deg, #38bdf8, #8b5cf6); color: #ffffff !important; font-weight: 600; font-size: 0.95rem; padding: 8px 26px; border-radius: 50px; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25); border: 1px solid rgba(255, 255, 255, 0.1); display: inline-flex; align-items: center; }
+        .btn-nav-signup:hover { box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); transform: translateY(-2px); }
+
+        .user-pill { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 50px; padding: 5px 5px 5px 20px; display: flex; align-items: center; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); transition: 0.3s;}
+        .btn-logout-pill { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 50px; padding: 6px 18px; font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: 0.3s; border: 1px solid rgba(239, 68, 68, 0.2); margin-left: 15px; }
+        .btn-logout-pill:hover { background: #ef4444; color: white; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        .text-gradient-animated { background: linear-gradient(to right, #38bdf8, #8b5cf6, #38bdf8); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s linear infinite; }
+        @keyframes shine { to { background-position: 200% center; } }
+
+        /* --- FEATURE 1: COUNTERS --- */
+        .counter-box { padding: 20px; border-right: 1px solid rgba(255,255,255,0.05); }
+        .counter-box:last-child { border: none; }
+        .counter-number { font-size: 3.5rem; font-weight: 800; margin-bottom: 5px; }
+        .counter-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; font-weight: 600; }
+
+        /* --- FEATURE 2: SAAS PREVIEW --- */
+        .dashboard-preview-wrapper { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 16px; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 40px rgba(56,189,248,0.15); transition: 0.3s; transform-style: preserve-3d; transform: perspective(1000px); margin: 0 auto; max-width: 900px; cursor: pointer;}
+        .preview-header { background: #0f172a; padding: 12px 20px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); transform: translateZ(20px); }
+        .dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .dot.red { background: #ef4444; } .dot.yellow { background: #f59e0b; } .dot.green { background: #10b981; }
+        .dashboard-img { width: 100%; height: auto; display: block; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; transform: translateZ(10px); opacity: 0.9; transition: 0.3s;}
+        .dashboard-preview-wrapper:hover .dashboard-img { opacity: 1; }
+
+        /* --- FEATURE 3: HOW IT WORKS --- */
+        .step-icon-wrap { width: 80px; height: 80px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #38bdf8; margin: 0 auto 20px; position: relative; z-index: 2; box-shadow: 0 0 20px rgba(56,189,248,0.1); transition: 0.3s; }
+        .step-connector { position: absolute; top: 40px; left: 16.66%; width: 66.66%; height: 2px; background: dashed 2px rgba(255,255,255,0.1); z-index: 1; }
+        
+        /* --- MODULE CARDS --- */
+        .glass-card { position: relative; background: rgba(30, 41, 59, 0.3); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 40px 30px; height: 100%; text-align: left; overflow: hidden; transition: border-color 0.4s, background 0.4s; }
+        .glass-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(56, 189, 248, 0.15), transparent 40%); z-index: 0; pointer-events: none; opacity: 0; transition: opacity 0.3s ease; }
+        .glass-card:hover::before { opacity: 1; }
+        .glass-card > * { position: relative; z-index: 1; transform: translateZ(30px); } 
+        .glass-card:hover { border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5); background: rgba(30, 41, 59, 0.6); }
+
+        .btn-glow { background: linear-gradient(135deg, #38bdf8, #8b5cf6); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; letter-spacing: 0.5px; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; width: 100%;}
+        .btn-glow:hover { box-shadow: 0 10px 30px rgba(139, 92, 246, 0.6); color: white; transform: translateY(-2px);}
+
+        /* ========================================================
+           🌟 THEME OVERRIDES (ONLY CHANGES COLORS) 🌟
+           ======================================================== */
+        [data-theme="light"] body { background-color: #ffffff; color: #0f172a; }
+        [data-theme="light"] body::before { opacity: 0; }
+        [data-theme="light"] #particles-js { opacity: 0.1; filter: invert(1); }
+        [data-theme="light"] .navbar-custom { background: rgba(255, 255, 255, 0.9); border-bottom: 1px solid #e2e8f0; }
+        [data-theme="light"] .brand-text, [data-theme="light"] .text-white { color: #0f172a !important; }
+        [data-theme="light"] .text-muted { color: #64748b !important; }
+        [data-theme="light"] .text-light { color: #334155 !important; }
+        [data-theme="light"] .bg-dark { background-color: #f8fafc !important; }
+        [data-theme="light"] .border-light { border-color: #cbd5e1 !important; }
+        [data-theme="light"] .glass-card { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        [data-theme="light"] .user-pill { background: #f8fafc; border-color: #e2e8f0; box-shadow: none; }
+        [data-theme="light"] .dashboard-preview-wrapper { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        [data-theme="light"] .preview-header { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        [data-theme="light"] .step-icon-wrap { background: rgba(56, 189, 248, 0.1); border-color: #e2e8f0; color: #0f172a; box-shadow: none;}
+        [data-theme="light"] .step-connector { background: dashed 2px rgba(0,0,0,0.1); }
+
+        [data-theme="hybrid"] body { background-color: #f1f5f9; color: #0f172a; }
+        [data-theme="hybrid"] #particles-js { opacity: 0.15; filter: invert(1); }
+        [data-theme="hybrid"] .navbar-custom { background: rgba(248, 250, 252, 0.8); border-bottom: 1px solid rgba(56, 189, 248, 0.2); }
+        [data-theme="hybrid"] .brand-text, [data-theme="hybrid"] .text-white { color: #0f172a !important; }
+        [data-theme="hybrid"] .text-muted { color: #475569 !important; }
+        [data-theme="hybrid"] .text-light { color: #334155 !important; }
+        [data-theme="hybrid"] .bg-dark { background-color: #ffffff !important; }
+        [data-theme="hybrid"] .glass-card { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(16px); border-color: rgba(56, 189, 248, 0.3); }
+        [data-theme="hybrid"] .user-pill { background: #ffffff; border-color: rgba(56, 189, 248, 0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
+        [data-theme="hybrid"] .dashboard-preview-wrapper { background: rgba(255,255,255,0.6); backdrop-filter: blur(16px); border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+        [data-theme="hybrid"] .preview-header { background: rgba(248, 250, 252, 0.8); border-bottom: 1px solid rgba(56, 189, 248, 0.2); }
+        [data-theme="hybrid"] .step-icon-wrap { background: #ffffff; border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        [data-theme="hybrid"] .step-connector { background: dashed 2px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+    <div id="scroll-progress"></div>
+    <div id="particles-js"></div>
+
+    <nav class="navbar navbar-expand-lg navbar-custom fixed-top px-4" data-aos="fade-down" data-aos-duration="1000">
+        <div class="container-fluid max-w-1200">
+            <a class="brand-logo-wrapper" href="{% url 'home' %}">
+                <svg class="modern-ai-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#38bdf8" />
+                            <stop offset="100%" stop-color="#8b5cf6" />
+                        </linearGradient>
+                        <linearGradient id="coreGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#8b5cf6" />
+                            <stop offset="100%" stop-color="#38bdf8" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="50" cy="50" r="44" stroke="url(#logoGrad)" stroke-width="2" fill="none" stroke-dasharray="15 10" class="spin-slow" />
+                    <polygon points="50,15 80,32 80,68 50,85 20,68 20,32" stroke="url(#logoGrad)" stroke-width="2.5" fill="rgba(139, 92, 246, 0.15)" class="spin-fast-reverse" />
+                    <circle cx="50" cy="50" r="12" fill="url(#coreGrad)" class="pulse-core" />
+                </svg>
+                <span class="brand-text">Insight<span style="color:#38bdf8; margin-left: 2px;">Data</span><span class="thin">Miner</span></span>
+            </a>
+            
+            <button class="navbar-toggler border-0 shadow-none d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="fa-solid fa-bars text-info"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-3">
+                    <li class="nav-item"><a class="nav-link text-muted fw-medium" href="#">Home</a></li>
+                    <li class="nav-item"><a class="nav-link text-muted fw-medium" href="#how-it-works">How It Works</a></li>
+                    <li class="nav-item"><a class="nav-link text-muted fw-medium" href="#modules-section">Modules</a></li>
+                </ul>
+
+                <div class="d-flex align-items-center mt-3 mt-lg-0 gap-3">
+                    <div class="dropdown theme-dropdown">
+                        <button class="btn btn-sm btn-outline-info rounded-pill px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-palette me-1"></i> Theme
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg">
+                            <li><a class="dropdown-item" href="#" onclick="setTheme('dark')"><i class="fa-solid fa-moon me-2 text-primary"></i> Original Dark</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setTheme('light')"><i class="fa-solid fa-sun me-2 text-warning"></i> Enterprise Light</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setTheme('hybrid')"><i class="fa-solid fa-layer-group me-2 text-success"></i> Modern Hybrid</a></li>
+                        </ul>
+                    </div>
+
+                    {% if user.is_authenticated %}
+                        <div class="user-pill d-none d-md-flex">
+                            <span class="text-light small"><i class="fa-solid fa-circle-user text-info me-2 fs-6 align-middle"></i> <strong class="text-white">{{ user.username }}</strong></span>
+                            <a href="{% url 'logout' %}" class="btn-logout-pill">Logout</a>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn-nav-login">Log In</a>
+                        <a href="{% url 'signup' %}" class="btn-nav-signup">Get Started</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="container text-center" style="padding: 160px 0 60px;" data-aos="zoom-in" data-aos-duration="1000">
+        <div class="d-inline-block mb-3 px-3 py-1 rounded-pill" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3);">
+            <span class="text-info fw-bold small"><i class="fa-solid fa-bolt me-1"></i> 100% No-Code Platform</span>
+        </div>
+        <h1 class="fw-bold mb-4" style="font-size: 3.8rem; letter-spacing: -1px; line-height: 1.2;">
+            Your No-Code Data Science <br> <span class="text-gradient-animated">Workspace.</span>
+        </h1>
+        <p class="text-muted mx-auto mb-5" style="font-size: 1.15rem; max-width: 750px; line-height: 1.6;">
+            From raw datasets to AI-powered insights. Clean messy data, explore interactive dashboards, and train Machine Learning models instantly—without writing a single line of code.
+        </p>
+    </header>
+
+    <div class="container text-center mb-5 pb-4" data-aos="fade-up" data-aos-delay="200">
+        <div class="dashboard-preview-wrapper" data-tilt data-tilt-max="4" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
+            <div class="preview-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="ms-3 text-muted small" style="font-family: 'Fira Code', monospace;">insightdataminer / executive-dashboard</span>
+            </div>
+            
+            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200&auto=format&fit=crop" alt="Dashboard Preview" class="img-fluid dashboard-img">
+        </div>
+    </div>
+
+    <section class="container mt-5 pt-5 border-top border-secondary border-opacity-25 pb-5">
+        <div class="row text-center" data-aos="fade-up">
+            <div class="col-md-4 counter-box">
+                <h2 class="counter-number text-gradient-animated"><span class="count-up" data-target="0">0</span></h2>
+                <p class="counter-label text-muted">Lines of Code Needed</p>
+            </div>
+            <div class="col-md-4 counter-box">
+                <h2 class="counter-number text-gradient-animated"><span class="count-up" data-target="3">0</span></h2>
+                <p class="counter-label text-muted">Intelligent AI Modules</p>
+            </div>
+            <div class="col-md-4 counter-box">
+                <h2 class="counter-number text-gradient-animated"><span class="count-up" data-target="100">0</span>%</h2>
+                <p class="counter-label text-muted">Data Privacy (Local Engine)</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="container mt-5 pt-4 mb-5 pb-5">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="fw-bold text-white mb-2">How It Works</h2>
+            <p class="text-muted">Three simple steps to unlock your data's potential.</p>
+        </div>
+        <div class="row position-relative mt-5">
+            <div class="step-connector d-none d-md-block"></div>
+            
+            <div class="col-md-4 text-center mb-4 mb-md-0" data-aos="fade-up" data-aos-delay="100">
+                <div class="step-icon-wrap"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                <h5 class="text-white fw-bold mt-3">1. Upload Data</h5>
+                <p class="text-muted small px-3">Securely upload your raw, messy CSV or Excel file directly into the engine.</p>
+            </div>
+            
+            <div class="col-md-4 text-center mb-4 mb-md-0" data-aos="fade-up" data-aos-delay="200">
+                <div class="step-icon-wrap" style="color: #c084fc; border-color: rgba(168, 85, 247, 0.3);"><i class="fa-solid fa-broom"></i></div>
+                <h5 class="text-white fw-bold mt-3">2. Auto-Clean & Visualize</h5>
+                <p class="text-muted small px-3">The system automatically imputes missing values and generates an interactive dashboard.</p>
+            </div>
+            
+            <div class="col-md-4 text-center" data-aos="fade-up" data-aos-delay="300">
+                <div class="step-icon-wrap" style="color: #10b981; border-color: rgba(16, 185, 129, 0.3);"><i class="fa-solid fa-brain"></i></div>
+                <h5 class="text-white fw-bold mt-3">3. AI Predicts</h5>
+                <p class="text-muted small px-3">Train and deploy the most accurate Machine Learning models with a single click.</p>
+            </div>
+        </div>
+    </section>
+
+    <div id="modules-section" class="container mb-5 pt-5 border-top border-secondary border-opacity-25">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="fw-bold text-white mb-2">Platform Modules</h2>
+            <p class="text-muted">Enter the workspace and start exploring.</p>
+        </div>
+        <div class="row g-4">
+            
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="glass-card h-100 d-flex flex-column">
+                    <i class="fa-solid fa-wand-magic-sparkles fa-2x text-info mb-3"></i>
+                    <h4 class="text-white fw-bold mb-3">Data Preprocessing</h4>
+                    <p class="text-muted mb-4 flex-grow-1">Upload CSV/Excel files. Automatically clean missing values, handle outliers, and encode features instantly.</p>
+                    <a href="{% url 'module1' %}" class="btn-glow mt-auto">Start Preprocessing <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                <div class="glass-card h-100 d-flex flex-column" style="border-color: rgba(168, 85, 247, 0.3);">
+                    <i class="fa-solid fa-chart-pie fa-2x text-purple mb-3" style="color:#c084fc;"></i>
+                    <h4 class="text-white fw-bold mb-3">Visual Dashboard</h4>
+                    <p class="text-muted mb-4 flex-grow-1">Turn boring numbers into stunning interactive graphs. Instantly uncover trends and correlations.</p>
+                    <a href="{% url 'module2' %}" class="btn-glow mt-auto">Launch Analytics <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                <div class="glass-card h-100 d-flex flex-column" style="border-color: rgba(56, 189, 248, 0.3);">
+                    <i class="fa-solid fa-robot fa-2x text-info mb-3"></i>
+                    <h4 class="text-white fw-bold mb-3">AutoML Predictions</h4>
+                    <p class="text-muted mb-4 flex-grow-1">Evaluate your dataset and train the most accurate Machine Learning models automatically.</p>
+                    <a href="{% url 'module3' %}" class="btn-glow mt-auto">Launch AutoML <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Report Section -->
+    {% if user.is_authenticated %}
+    <div class="container mb-5 pt-5 border-top border-secondary border-opacity-25">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="fw-bold text-white mb-2">Comprehensive Report</h2>
+            <p class="text-muted">Generate a detailed report of your complete data analysis workflow.</p>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="glass-card h-100 d-flex flex-column text-center">
+                    <i class="fa-solid fa-file-pdf fa-3x text-danger mb-3"></i>
+                    <h4 class="text-white fw-bold mb-3">Download Complete Report</h4>
+                    <p class="text-muted mb-4 flex-grow-1">
+                        Get a comprehensive PDF report including original dataset details, preprocessing results,
+                        visual analytics charts, and AutoML performance metrics.
+                    </p>
+                    <div id="report-status" class="mb-3">
+                        <small class="text-muted">Checking eligibility...</small>
+                    </div>
+                    <button id="generate-report-btn" class="btn-glow mt-auto" disabled>
+                        <i class="fa-solid fa-download me-2"></i>Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <footer class="mt-5 border-top border-secondary border-opacity-25 pt-5 pb-3" style="background: rgba(2, 6, 23, 0.8);">
+        <div class="container text-center">
+            <div class="mb-3">
+                <svg class="modern-ai-logo d-inline-block align-middle me-2" style="width: 30px; height: 30px;" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="44" stroke="#38bdf8" stroke-width="2" fill="none" stroke-dasharray="15 10" />
+                    <circle cx="50" cy="50" r="12" fill="#8b5cf6" />
+                </svg>
+                <span class="brand-text d-inline-block align-middle" style="font-size: 1.2rem;">Insight<span style="color:#38bdf8; margin-left: 2px;">Data</span><span class="thin">Miner</span></span>
+            </div>
+            <p class="text-muted small mb-4">Built for Beginners, Powered by Advanced AI.<br> Final Year Project 2026.</p>
+            <div class="d-flex justify-content-center gap-3 mb-4">
+                <a href="#" class="text-muted fs-5"><i class="fa-brands fa-github hover-glow"></i></a>
+                <a href="#" class="text-muted fs-5"><i class="fa-brands fa-linkedin hover-glow"></i></a>
+                <a href="#" class="text-muted fs-5"><i class="fa-solid fa-globe hover-glow"></i></a>
+            </div>
+            <p class="text-muted small opacity-50 m-0">&copy; 2026 InsightDataMiner. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <script>
+        AOS.init({ once: true, offset: 50 });
+        
+        // 🌟 THEME SETTER FUNCTION 🌟
+        function setTheme(themeName) {
+            document.cookie = "idm_theme=" + themeName + "; path=/; max-age=31536000";
+            window.location.reload(); 
+        }
+
+        particlesJS("particles-js", {
+            "particles": { "number": { "value": 50 }, "color": { "value": "#8b5cf6" }, "shape": { "type": "circle" }, "opacity": { "value": 0.4 }, "size": { "value": 3 }, "line_linked": { "enable": true, "distance": 150, "color": "#38bdf8", "opacity": 0.2, "width": 1 }, "move": { "enable": true, "speed": 1.5 } }, "retina_detect": true
+        });
+
+        // 🌟 ANIMATED COUNTERS LOGIC 🌟
+        const counters = document.querySelectorAll('.count-up');
+        const counterObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    const counter = entry.target;
+                    const target = +counter.getAttribute('data-target');
+                    const updateCount = () => {
+                        const count = +counter.innerText;
+                        const inc = target / 50; 
+                        if (count < target) {
+                            counter.innerText = Math.ceil(count + inc);
+                            setTimeout(updateCount, 30);
+                        } else { counter.innerText = target; }
+                    };
+                    updateCount();
+                    observer.unobserve(counter); // Animate only once
+                }
+            });
+        }, { threshold: 0.5 });
+        counters.forEach(counter => counterObserver.observe(counter));
+
+        // 🌟 REPORT ELIGIBILITY CHECK 🌟
+        {% if user.is_authenticated %}
+        function checkReportEligibility() {
+            fetch('{% url "check_report_eligibility" %}')
+                .then(response => response.json())
+                .then(data => {
+                    const statusDiv = document.getElementById('report-status');
+                    const button = document.getElementById('generate-report-btn');
+
+                    if (data.eligible) {
+                        statusDiv.innerHTML = '<small class="text-success"><i class="fa-solid fa-check-circle me-1"></i>Report ready for download!</small>';
+                        button.disabled = false;
+                        button.onclick = () => {
+                            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Generating...';
+                            button.disabled = true;
+                            window.location.href = '{% url "generate_report" %}';
+                        };
+                    } else {
+                        statusDiv.innerHTML = `<small class="text-warning"><i class="fa-solid fa-clock me-1"></i>${data.message}</small>`;
+                        button.disabled = true;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking report eligibility:', error);
+                    document.getElementById('report-status').innerHTML = '<small class="text-danger">Error checking eligibility</small>';
+                });
+        }
+
+        // Check eligibility when page loads
+        document.addEventListener('DOMContentLoaded', checkReportEligibility);
+        {% endif %}
+    </script>
+</body>
+</html>

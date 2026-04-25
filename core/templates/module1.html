@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <script>
+        let match = document.cookie.match(new RegExp('(^| )idm_theme=([^;]+)'));
+        let theme = match ? match[2] : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Preprocessing | InsightDataMiner</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* Base and Themes */
+        html { scroll-behavior: smooth; } 
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; min-height: 100vh; position: relative; overflow-x: hidden; padding-bottom: 50px; transition: 0.3s;}
+        #scroll-progress { position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: linear-gradient(to right, #38bdf8, #8b5cf6); z-index: 10000; box-shadow: 0 0 15px #38bdf8, 0 0 30px #8b5cf6; transition: width 0.1s; }
+        body::before { content: ""; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(56,189,248,0.12) 0%, rgba(139,92,246,0.12) 25%, transparent 50%); animation: rotateAurora 30s linear infinite; z-index: -2; }
+        @keyframes rotateAurora { 100% { transform: rotate(360deg); } }
+
+        /* Components */
+        .navbar-custom { background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 15px 0; z-index: 1000;}
+        .brand-logo-wrapper { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .modern-ai-logo { width: 45px; height: 45px; filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.6)); }
+        .spin-slow { animation: spinLogo 8s linear infinite; }
+        @keyframes spinLogo { 100% { transform: rotate(360deg); } }
+        .brand-text { font-size: 1.3rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; }
+        .text-gradient-animated { background: linear-gradient(to right, #38bdf8, #8b5cf6, #38bdf8); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s linear infinite; }
+        @keyframes shine { to { background-position: 200% center; } }
+        
+        .dashboard-container { margin-top: 100px; }
+        .glass-card { background: rgba(30, 41, 59, 0.3); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
+        .upload-zone { border: 2px dashed rgba(56, 189, 248, 0.4); border-radius: 15px; padding: 40px; background: rgba(15, 23, 42, 0.3); text-align: center; cursor: pointer; transition: 0.3s; }
+        .upload-zone:hover { border-color: #38bdf8; background: rgba(56, 189, 248, 0.1); transform: scale(1.02); }
+        .cyber-log-box { background: #000; border: 1px solid rgba(56,189,248,0.4); border-radius: 8px; padding: 15px; font-family: monospace; font-size: 0.85rem; color: #10b981; height: 200px; overflow-y: auto; margin-bottom: 30px; }
+        .log-line { display: block; margin-bottom: 4px; }
+        .log-cursor { display: inline-block; width: 8px; height: 14px; background: #38bdf8; animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .form-control { background-color: rgba(15, 23, 42, 0.5) !important; color: #f8fafc !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 10px; }
+        .form-control:focus { border-color: #38bdf8 !important; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2) !important; }
+        .btn-glow { background: linear-gradient(135deg, #38bdf8, #8b5cf6); color: white; border: none; padding: 14px 24px; border-radius: 12px; font-weight: 700; width: 100%; transition: 0.3s; }
+        .btn-glow:hover { box-shadow: 0 10px 30px rgba(139, 92, 246, 0.6); color: white; transform: translateY(-2px);}
+        .table-wrapper { background: rgba(15, 23, 42, 0.6); overflow-x: auto; }
+        .stat-box { padding: 20px; border: 1px solid rgba(255,255,255,0.05); border-radius: 15px; background: rgba(15, 23, 42, 0.4); }
+
+        /* 🌟 NEW: AI PROCESSING LOADER CSS 🌟 */
+        .ai-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2,6,23,0.9); backdrop-filter: blur(10px); z-index: 99999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .ai-loader.active { opacity: 1; pointer-events: all; }
+
+        /* Theme Overrides */
+        [data-theme="light"] body { background-color: #ffffff; color: #0f172a; } [data-theme="light"] body::before { opacity: 0; }
+        [data-theme="light"] .navbar-custom { background: rgba(255, 255, 255, 0.9); border-bottom: 1px solid #e2e8f0; }
+        [data-theme="light"] .brand-text, [data-theme="light"] .text-white { color: #0f172a !important; }
+        [data-theme="light"] .text-muted { color: #64748b !important; } [data-theme="light"] .bg-dark { background-color: #f8fafc !important; }
+        [data-theme="light"] .glass-card, [data-theme="light"] .stat-box { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        [data-theme="hybrid"] body { background-color: #f1f5f9; color: #0f172a; } [data-theme="hybrid"] body::before { opacity: 0; }
+        [data-theme="hybrid"] .navbar-custom { background: rgba(248, 250, 252, 0.8); border-bottom: 1px solid rgba(56, 189, 248, 0.2); }
+        [data-theme="hybrid"] .brand-text, [data-theme="hybrid"] .text-white { color: #0f172a !important; }
+        [data-theme="hybrid"] .text-muted { color: #475569 !important; } [data-theme="hybrid"] .bg-dark { background-color: #ffffff !important; }
+        [data-theme="hybrid"] .glass-card, [data-theme="hybrid"] .stat-box { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(16px); border-color: rgba(56, 189, 248, 0.3); }
+    </style>
+</head>
+<body>
+    <div id="ai-loader" class="ai-loader">
+        <div class="text-center">
+            <i class="fa-solid fa-microchip fa-spin fa-4x text-info mb-3"></i>
+            <h3 class="fw-bold text-white mb-2">Engine Processing...</h3>
+            <p class="text-info small">Executing AI algorithms. Please wait.</p>
+        </div>
+    </div>
+
+    <div id="scroll-progress"></div>
+
+    <nav class="navbar navbar-custom fixed-top px-4" data-aos="fade-down" data-aos-duration="800">
+        <a class="brand-logo-wrapper" href="{% url 'home' %}">
+            <svg class="modern-ai-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="44" stroke="#38bdf8" stroke-width="2" fill="none" stroke-dasharray="15 10" class="spin-slow" />
+                <circle cx="50" cy="50" r="12" fill="#8b5cf6" />
+            </svg>
+            <span class="brand-text d-none d-sm-flex">Data<span class="text-gradient-animated mx-1">Preprocessing</span>Engine</span>
+        </a>
+        
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <div class="dropdown me-3">
+                <button class="btn btn-sm btn-outline-info rounded-pill px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-palette me-1"></i> Theme
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="background: rgba(15,23,42,0.95); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <li><a class="dropdown-item text-light" href="#" onclick="setTheme('dark')">Dark</a></li>
+                    <li><a class="dropdown-item text-light" href="#" onclick="setTheme('light')">Light</a></li>
+                    <li><a class="dropdown-item text-light" href="#" onclick="setTheme('hybrid')">Hybrid</a></li>
+                </ul>
+            </div>
+            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-2 fw-medium"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Module 1 Active</span>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 dashboard-container">
+        <div class="row g-4">
+            <div class="col-xl-4 col-lg-5">
+                <div class="glass-card" data-aos="fade-right" data-aos-delay="100">
+                    <h5 class="fw-bold mb-4 text-white"><i class="fa-solid fa-cloud-arrow-up text-info me-2"></i>Data Ingestion</h5>
+                    <form method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
+                        {% csrf_token %}
+                        <div class="upload-zone mb-3" onclick="document.getElementById('file-input').click();">
+                            <i class="fa-solid fa-file-csv fa-3x text-info mb-3"></i>
+                            <h6 id="file-name-display" class="fw-bold">Select Raw Dataset</h6>
+                            <p class="small text-muted m-0">Supports: .csv, .xlsx, .json</p>
+                            <input type="file" id="file-input" name="dataset" style="display: none;" onchange="this.form.submit()">
+                        </div>
+                        <input type="hidden" name="action" value="upload_file">
+                    </form>
+
+                    <div class="d-flex align-items-center my-3">
+                        <hr class="flex-grow-1 border-secondary"><span class="mx-3 text-muted small fw-bold">OR</span><hr class="flex-grow-1 border-secondary">
+                    </div>
+                    <form method="POST" onsubmit="showLoader()">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="load_sample">
+                        <button type="submit" class="btn btn-outline-info w-100 rounded-pill fw-bold"><i class="fa-solid fa-flask me-2"></i> Load Sample Data (Titanic)</button>
+                    </form>
+                </div>
+
+                {% if filename %}
+                <div class="glass-card" data-aos="fade-up" data-aos-delay="200">
+                    <h5 class="fw-bold mb-4 text-info"><i class="fa-solid fa-sliders me-2"></i>Smart Parameters</h5>
+                    <form method="POST" onsubmit="showLoader()">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="execute_pipeline">
+                        <input type="hidden" name="filename" value="{{ filename }}">
+                        
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1 fw-medium">Prune Columns</label>
+                            <input type="text" name="remove_cols" class="form-control" placeholder="e.g. UserID, Timestamp">
+                        </div>
+                        <div class="mb-4">
+                            <label class="small text-muted mb-1 fw-medium">Rename Features</label>
+                            <input type="text" name="rename_cols" class="form-control" placeholder="old_name:new_name">
+                        </div>
+                        
+                        <div class="p-3 border border-light border-opacity-10 rounded-3 bg-dark bg-opacity-25 mb-4">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="do_clean" id="c1" checked>
+                                <label class="form-check-label small fw-bold" for="c1">Auto-Impute Missing Values <i class="fa-solid fa-circle-question ms-1 text-muted" data-bs-toggle="tooltip" title="Automatically fills in empty data cells with the average or most frequent value."></i></label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="do_outliers" id="c2" checked>
+                                <label class="form-check-label small fw-bold" for="c2">Mitigate Extreme Outliers <i class="fa-solid fa-circle-question ms-1 text-muted" data-bs-toggle="tooltip" title="Removes unrealistic extreme numbers using the Interquartile Range (IQR) method."></i></label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="do_encode" id="c3" checked>
+                                <label class="form-check-label small fw-bold" for="c3">Encode Categorical Labels <i class="fa-solid fa-circle-question ms-1 text-muted" data-bs-toggle="tooltip" title="Converts text data (like 'Male'/'Female') into numbers (0/1) for AI models."></i></label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="do_scale" id="c4">
+                                <label class="form-check-label small fw-bold" for="c4">Standardize Features (Z-Score) <i class="fa-solid fa-circle-question ms-1 text-muted" data-bs-toggle="tooltip" title="Scales all numbers to a standard range so big numbers don't dominate the AI."></i></label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-glow">Execute Intelligence Pipeline <i class="fa-solid fa-bolt ms-2"></i></button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="col-xl-8 col-lg-7">
+                {% if show_results %}
+                <div class="glass-card" data-aos="fade-left" data-aos-delay="200">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-light border-opacity-10">
+                        <h4 class="fw-bold m-0 text-white"><i class="fa-solid fa-check-circle text-success me-2"></i>Refinement Report</h4>
+                        <a href="/media/{{ filename }}" download class="btn btn-success fw-bold"><i class="fa-solid fa-download me-2"></i>Download Clean Data</a>
+                    </div>
+
+                    <div class="cyber-log-box" id="cyberLog">
+                        <div id="logContent"></div><span class="log-cursor"></span>
+                    </div>
+
+                    <div class="table-responsive table-wrapper mb-4 rounded-3 border-0">
+                        <table class="table table-dark table-hover m-0 align-middle">
+                            <thead class="bg-dark bg-opacity-50"><tr><th class="py-3">Health Metric</th><th class="py-3 text-muted">Original State</th><th class="py-3 text-success">Refined State</th></tr></thead>
+                            <tbody>
+                                <tr><td class="fw-medium">Matrix Dimensions</td><td>{{ comparison.before.rows }} x {{ comparison.before.cols }}</td><td class="fw-bold">{{ comparison.after.rows }} x {{ comparison.after.cols }}</td></tr>
+                                <tr><td class="fw-medium">Missing Entries</td><td><span class="badge bg-danger">{{ comparison.before.missing }}</span></td><td><span class="badge bg-success">{{ comparison.after.missing }} (Resolved)</span></td></tr>
+                                <tr><td class="fw-medium">Outliers Mitigated</td><td>-</td><td class="text-success fw-bold">{{ comparison.after.outliers_fixed }} Clipped</td></tr>
+                                <tr><td class="fw-medium">Categorical Features</td><td>{{ comparison.before.cats }}</td><td class="text-success fw-bold">{{ comparison.after.cats }} Encoded</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if plot_data %}
+                    <h5 class="fw-bold text-white mt-5 mb-4"><i class="fa-solid fa-chart-area text-warning me-2"></i>Outlier Visuals</h5>
+                    <div class="row g-4 mb-5">
+                        {% for item in plot_data %}
+                        <div class="col-md-6 text-center"><div class="p-3 border border-light border-opacity-10 rounded-4 bg-dark bg-opacity-25 h-100"><span class="small fw-bold text-info d-block mb-3">{{ item.column }} Distribution</span><img src="data:image/png;base64,{{ item.chart }}" class="img-fluid rounded-3"></div></div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-table text-info me-2"></i>Output Preview</h5>
+                    <div class="table-responsive table-wrapper border-0 small">{{ data_html|safe }}</div>
+                </div>
+
+                {% elif data_html %}
+                <div class="glass-card" data-aos="fade-left" data-aos-delay="200">
+                    <h4 class="fw-bold mb-4 text-white"><i class="fa-solid fa-heart-pulse text-danger me-2"></i>Raw Dataset Health</h4>
+                    <div class="row g-4 mb-5 text-center">
+                        <div class="col-md-4"><div class="stat-box"><i class="fa-solid fa-list-ol fa-2x text-muted mb-2"></i><h6 class="text-muted">Total Rows</h6><h2 class="text-white fw-bold m-0">{{ total_rows }}</h2></div></div>
+                        <div class="col-md-4"><div class="stat-box"><i class="fa-solid fa-columns fa-2x text-muted mb-2"></i><h6 class="text-muted">Features</h6><h2 class="text-white fw-bold m-0">{{ total_cols }}</h2></div></div>
+                        <div class="col-md-4"><div class="stat-box border-warning border-opacity-25"><i class="fa-solid fa-triangle-exclamation fa-2x text-warning mb-2"></i><h6 class="text-warning">Missing Values</h6><h2 class="text-warning fw-bold m-0">{{ total_missing }}</h2></div></div>
+                    </div>
+                    <h5 class="fw-bold text-white mb-3"><i class="fa-regular fa-eye text-info me-2"></i>Raw Data Glimpse</h5>
+                    <div class="table-responsive table-wrapper border-0 small">{{ data_html|safe }}</div>
+                </div>
+                {% else %}
+                <div class="glass-card d-flex flex-column align-items-center justify-content-center text-center h-100" style="min-height: 60vh;">
+                    <i class="fa-solid fa-database fa-5x text-info opacity-50 mb-4"></i>
+                    <h3 class="fw-bold text-white">Engine on Standby</h3>
+                    <p class="text-muted small max-w-500">Upload a dataset or load the sample data to initialize the pipeline.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ once: true, offset: 50 });
+        function setTheme(t) { document.cookie = "idm_theme=" + t + "; path=/; max-age=31536000"; window.location.reload(); }
+        function showLoader() { document.getElementById('ai-loader').classList.add('active'); }
+        
+        // Initialize Tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+        // 🌟 NEW: SWEET ALERT LOGIC 🌟
+        document.addEventListener("DOMContentLoaded", function() {
+            const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+            const bgCol = isDark ? '#0f172a' : '#ffffff';
+            const textCol = isDark ? '#f8fafc' : '#0f172a';
+            
+            {% if success_msg %}
+            Swal.fire({ title: 'Success!', text: '{{ success_msg }}', icon: 'success', background: bgCol, color: textCol, confirmButtonColor: '#10b981' });
+            {% endif %}
+            {% if error %}
+            Swal.fire({ title: 'Error!', text: '{{ error }}', icon: 'error', background: bgCol, color: textCol, confirmButtonColor: '#ef4444' });
+            {% endif %}
+        });
+
+        // Typing Effect Log
+        const showResultsFlag = "{{ show_results|yesno:'true,false' }}" === "true";
+        if (showResultsFlag) {
+            const logLines = ["> Initializing Kernel...", "> Checking {{ comparison.before.missing }} missing points...", "> Clean matrix created. Status: OPTIMAL."];
+            let l = 0, c = 0, el = document.getElementById("logContent");
+            function typeLog() {
+                if (l < logLines.length) {
+                    if (c === 0) el.innerHTML += `<span class="log-line text-info">${logLines[l].charAt(c)}</span>`;
+                    else el.lastChild.textContent += logLines[l].charAt(c);
+                    c++; if (c < logLines[l].length) setTimeout(typeLog, 20); else { c = 0; l++; setTimeout(typeLog, 400); }
+                }
+            } setTimeout(typeLog, 500); 
+        }
+    </script>
+</body>
+</html>
