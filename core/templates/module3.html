@@ -150,6 +150,13 @@
                         <p class="text-muted mb-0">{{ fit_suggestion }}</p>
                     </div>
                     {% endif %}
+                    {% if best_suggestion %}
+                    <div class="glass-card mb-4 p-3" style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.25);">
+                        <h6 class="text-purple mb-2">Best Prediction Suggestion</h6>
+                        <p class="text-muted mb-2">Auto-filled values based on dataset patterns for optimal prediction.</p>
+                        <button type="button" class="btn btn-outline-purple rounded-pill px-3" onclick="applyBestSuggestion()">Apply Best Suggestion</button>
+                    </div>
+                    {% endif %}
                     {% if fit_diagnostics %}
                     <div class="row g-3 mb-4">
                         <div class="col-sm-6 col-lg-3"><div class="kpi-box"><span class="small text-muted">Train Score</span><h4 class="fw-bold mb-0">{{ fit_diagnostics.train_score }}%</h4></div></div>
@@ -230,6 +237,21 @@
                 if(d.status === 'success') { document.getElementById('predValue').innerHTML = `<span class="text-success">${d.prediction}</span>`; } 
                 else { document.getElementById('predValue').innerHTML = `<span class="fs-6 text-danger">${d.message}</span>`; }
             });
+        }
+
+        function applyBestSuggestion() {
+            const suggestion = {{ best_suggestion|default:'{}'|safe }};
+            for (const [key, value] of Object.entries(suggestion)) {
+                const input = document.querySelector(`[name="${key}"]`);
+                if (input) {
+                    if (input.tagName === 'SELECT') {
+                        input.value = value;
+                    } else {
+                        input.value = value;
+                    }
+                }
+            }
+            Swal.fire({ title: 'Applied!', text: 'Best suggestion values filled in the prediction form.', icon: 'info', background: document.documentElement.getAttribute('data-theme') !== 'light' ? '#0f172a' : '#fff', color: document.documentElement.getAttribute('data-theme') !== 'light' ? '#fff' : '#000', confirmButtonColor: '#8b5cf6' });
         }
     </script>
 </body>

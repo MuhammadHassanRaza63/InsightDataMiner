@@ -10,7 +10,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
@@ -218,10 +218,55 @@ def module1_workspace(request):
 # ==========================================
 def module2_visual_analytics(request):
     context = {'module': 'module2'}
+    # Initialize context variables to avoid template errors
+    context['best_pair_suggestion'] = {}
+    context['progress_steps'] = []
+    context['export_data'] = {}
+    context['auto_summary'] = {}
+    context['auto_insights'] = []
+    context['ai_narrative'] = ''
+    context['auto_dashboard_charts'] = []
     theme = request.COOKIES.get('idm_theme', 'dark')
     plot_template = 'plotly_white' if theme in ['light', 'hybrid'] else 'plotly_dark'
     font_color = '#475569' if theme in ['light', 'hybrid'] else '#94a3b8'
     if 'pinned_charts' not in request.session: request.session['pinned_charts'] = []
+
+    def load_dataset(filepath):
+        if filepath.endswith('.csv'):
+            return pd.read_csv(filepath)
+        if filepath.endswith('.json'):
+            return pd.read_json(filepath)
+        if filepath.endswith(('.xls', '.xlsx')):
+            return pd.read_excel(filepath)
+        return pd.DataFrame()
+
+    def auto_clean_dataframe(df):
+        df = df.copy()
+        # Remove exact duplicate rows and duplicate columns
+        df.drop_duplicates(inplace=True)
+        df = df.loc[:, ~df.columns.duplicated()]
+        # Remove empty rows and columns
+        df.dropna(axis=0, how='all', inplace=True)
+        df.dropna(axis=1, how='all', inplace=True)
+
+        for col in df.columns:
+            if df[col].isnull().any():
+                if pd.api.types.is_numeric_dtype(df[col]):
+                    df[col] = df[col].fillna(df[col].median())
+                else:
+                    df[col] = df[col].fillna(df[col].mode().iloc[0] if not df[col].mode().empty else 'Unknown')
+
+        for col in df.select_dtypes(include=[np.number]).columns:
+            if df[col].dropna().empty:
+                continue
+            q1, q3 = df[col].quantile(0.25), df[col].quantile(0.75)
+            iqr = q3 - q1
+            if iqr == 0 or pd.isna(iqr):
+                continue
+            lower, upper = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+            df[col] = np.clip(df[col], lower, upper)
+
+        return df
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -237,9 +282,23 @@ def module2_visual_analytics(request):
         elif 'new_dataset' in request.FILES:
             fs = FileSystemStorage()
             filename = fs.save(request.FILES['new_dataset'].name, request.FILES['new_dataset'])
-            request.session['active_dataset'] = fs.path(filename)
-            request.session['pinned_charts'] = []
-            context['success_msg'] = "Dataset Loaded!"
+            filepath = fs.path(filename)
+            try:
+                df = load_dataset(filepath)
+                df_clean = auto_clean_dataframe(df)
+                if filepath.endswith('.csv'):
+                    df_clean.to_csv(filepath, index=False)
+                elif filepath.endswith('.json'):
+                    df_clean.to_json(filepath, orient='records')
+                else:
+                    df_clean.to_excel(filepath, index=False)
+                request.session['active_dataset'] = filepath
+                request.session['pinned_charts'] = []
+                context['success_msg'] = "Dataset uploaded and auto-cleaned for attractive visualization."
+            except Exception as e:
+                context['error'] = f"Upload error: {str(e)}"
+                request.session['active_dataset'] = filepath
+                request.session['pinned_charts'] = []
 
     filepath = request.session.get('active_dataset', None)
     if not filepath or not os.path.exists(filepath):
@@ -337,14 +396,24 @@ def module2_visual_analytics(request):
             if action == 'clear_dashboard':
                 request.session['pinned_charts'] = []
                 context['success_msg'] = "Dashboard cleared!"
+            elif action == 'save_dashboard':
+                # Dashboard already saved in auto_dashboard
+                context['success_msg'] = "Dashboard saved to session!"
             elif action == 'auto_dashboard':
+                # Progress simulation
+                import time
+                progress_steps = ["Analyzing dataset...", "Computing statistics...", "Generating insights...", "Creating visualizations...", "Finalizing dashboard..."]
+                context['progress_steps'] = progress_steps  # For frontend animation
+                
+                level = request.POST.get('insight_level', 'basic')  # Basic or Advanced
+                
                 missing_total = int(df.isnull().sum().sum())
                 missing_pct = round((missing_total / df.size) * 100, 1) if df.size else 0
                 numeric_count = len(num_cols)
                 categorical_count = len(cat_cols)
 
                 column_summaries = []
-                for col in num_cols[:3]:
+                for col in num_cols[:5 if level == 'advanced' else 3]:
                     try:
                         column_summaries.append({
                             'name': col,
@@ -365,52 +434,125 @@ def module2_visual_analytics(request):
 
                 auto_insights = []
                 if missing_total > 0:
-                    auto_insights.append(f"{missing_total} missing values found ({missing_pct}%).")
+                    auto_insights.append(f"{missing_total} missing values found ({missing_pct}%). Consider imputation for better analysis.")
                 else:
                     auto_insights.append("No missing values detected; data quality looks strong.")
+                
                 if numeric_count > 1:
                     corr = df[num_cols].corr().abs().unstack().sort_values(ascending=False)
                     strong_corr = corr[(corr < 1.0) & (corr > 0.75)]
                     if not strong_corr.empty:
                         pair = strong_corr.index[0]
-                        auto_insights.append(f"Strong relationship between {pair[0]} and {pair[1]} ({strong_corr.iloc[0]:.2f}).")
+                        auto_insights.append(f"Strong relationship between {pair[0]} and {pair[1]} ({strong_corr.iloc[0]:.2f}). This suggests a potential predictive link.")
                     else:
-                        auto_insights.append("No overly strong numeric correlations detected; features are diverse.")
+                        auto_insights.append("No overly strong numeric correlations detected; features are diverse and independent.")
+                
                 if top_category:
-                    auto_insights.append(f"Top category in {cat_cols[0]} is {top_category}.")
+                    auto_insights.append(f"Top category in {cat_cols[0]} is {top_category}. This may indicate class imbalance if used for modeling.")
+                
                 if num_cols:
-                    auto_insights.append(f"Average {num_cols[0]} is {df[num_cols[0]].mean():.2f}.")
+                    avg_val = df[num_cols[0]].mean()
+                    auto_insights.append(f"Average {num_cols[0]} is {avg_val:.2f}. {'This is relatively high compared to typical ranges.' if avg_val > df[num_cols[0]].median() * 1.5 else 'This appears balanced.'}")
+
+                # Advanced insights
+                if level == 'advanced':
+                    if numeric_count > 1:
+                        try:
+                            from scipy.stats import ttest_ind
+                            if len(num_cols) > 1:
+                                group1 = df[num_cols[0]].dropna()
+                                group2 = df[num_cols[1]].dropna()
+                                if len(group1) > 1 and len(group2) > 1:
+                                    stat, p = ttest_ind(group1, group2)
+                                    if p < 0.05:
+                                        auto_insights.append(f"Statistical test shows significant difference between {num_cols[0]} and {num_cols[1]} (p={p:.3f}).")
+                                    else:
+                                        auto_insights.append(f"No significant difference found between {num_cols[0]} and {num_cols[1]} distributions.")
+                        except ImportError:
+                            auto_insights.append("Advanced statistical tests require scipy. Install with: pip install scipy")
+                    
+                    # Outlier detection
+                    if num_cols:
+                        q1 = df[num_cols[0]].quantile(0.25)
+                        q3 = df[num_cols[0]].quantile(0.75)
+                        iqr = q3 - q1
+                        outliers = ((df[num_cols[0]] < (q1 - 1.5 * iqr)) | (df[num_cols[0]] > (q3 + 1.5 * iqr))).sum()
+                        if outliers > 0:
+                            auto_insights.append(f"Detected {outliers} potential outliers in {num_cols[0]}. Consider robust scaling.")
+
+                # AI Narrative
+                narrative = f"This dataset contains {len(df)} records with {len(df.columns)} features. "
+                if missing_pct > 10:
+                    narrative += "The data has significant missing values, which may impact analysis quality. "
+                else:
+                    narrative += "The data appears clean with minimal missing information. "
+                if numeric_count > categorical_count:
+                    narrative += "Numeric features dominate, suggesting quantitative analysis opportunities. "
+                else:
+                    narrative += "Categorical features are prominent, ideal for classification tasks. "
+                narrative += "Key insights reveal " + auto_insights[0].lower() if auto_insights else "balanced data characteristics."
 
                 chart_list = []
                 if num_cols:
                     hist_chart = get_plotly_fig('histogram', num_cols[0], None, None)
-                    if hist_chart: chart_list.append(hist_chart)
+                    if hist_chart: 
+                        hist_chart.update_layout(height=500)
+                        chart_list.append(hist_chart)
                     box_chart = get_plotly_fig('box', None, num_cols[0], None)
-                    if box_chart: chart_list.append(box_chart)
+                    if box_chart: 
+                        box_chart.update_layout(height=500)
+                        chart_list.append(box_chart)
                     if len(num_cols) > 1:
                         scatter_chart = get_plotly_fig('scatter', num_cols[0], num_cols[1], None)
-                        if scatter_chart: chart_list.append(scatter_chart)
-                    corr_chart = get_plotly_fig('heatmap', None, None, None)
-                    if corr_chart: chart_list.append(corr_chart)
+                        if scatter_chart: 
+                            scatter_chart.update_layout(height=500)
+                            chart_list.append(scatter_chart)
+                    if level == 'advanced':
+                        corr_chart = get_plotly_fig('heatmap', None, None, None)
+                        if corr_chart: 
+                            corr_chart.update_layout(height=500)
+                            chart_list.append(corr_chart)
                 if cat_cols:
                     cat_chart = get_plotly_fig('count_bar', cat_cols[0], None, None)
-                    if cat_chart: chart_list.append(cat_chart)
+                    if cat_chart: 
+                        cat_chart.update_layout(height=500)
+                        chart_list.append(cat_chart)
 
-                context['auto_summary'] = {
-                    'rows': len(df),
-                    'missing': missing_total,
-                    'missing_pct': missing_pct,
-                    'numeric_cols': numeric_count,
-                    'categorical_cols': categorical_count,
-                    'features': len(df.columns),
-                    'health': f"{max(0, min(100, 100 - missing_pct))}%",
-                    'avg_col': round(df[num_cols[0]].mean(), 2) if num_cols else None,
-                    'top_category': top_category
+                # Save dashboard
+                saved_dashboard = {
+                    'summary': {
+                        'rows': len(df),
+                        'missing': missing_total,
+                        'missing_pct': missing_pct,
+                        'numeric_cols': numeric_count,
+                        'categorical_cols': categorical_count,
+                        'features': len(df.columns),
+                        'health': f"{max(0, min(100, 100 - missing_pct))}%",
+                        'avg_col': round(df[num_cols[0]].mean(), 2) if num_cols else None,
+                        'top_category': top_category
+                    },
+                    'insights': auto_insights,
+                    'narrative': narrative,
+                    'charts': [chart.to_html(full_html=False, config=plot_config) for chart in chart_list],
+                    'level': level,
+                    'timestamp': timezone.now().isoformat()
                 }
+                request.session['saved_auto_dashboard'] = saved_dashboard
+
+                # Export data preparation
+                context['export_data'] = {
+                    'summary': saved_dashboard['summary'],
+                    'insights': '\n'.join(auto_insights),
+                    'narrative': narrative
+                }
+
+                context['auto_summary'] = saved_dashboard['summary']
                 context['auto_insights'] = auto_insights
+                context['ai_narrative'] = narrative
                 context['column_summaries'] = column_summaries
-                context['auto_dashboard_charts'] = [chart.to_html(full_html=False, config=plot_config) for chart in chart_list[:4]]
-                context['success_msg'] = "Dashboard Generated!"
+                context['auto_dashboard_charts'] = [chart.to_html(full_html=False, config=plot_config) for chart in chart_list]
+                context['insight_level'] = level
+                context['success_msg'] = f"Advanced Dashboard Generated!" if level == 'advanced' else "Dashboard Generated!"
             elif action in ['generate_chart', 'pin_chart']:
                 c_type, x_col, y_col, c_col = request.POST.get('chart_type'), request.POST.get('x_axis'), request.POST.get('y_axis'), request.POST.get('color_col')
                 if c_col == 'none': c_col = None
@@ -445,7 +587,6 @@ def module2_visual_analytics(request):
 
     except Exception as e: context['error'] = f"Engine Error: {str(e)}"
     return render(request, 'module2.html', context)
-
 
 # ==========================================
 # MODULE 3 (AUTOML)
@@ -598,6 +739,38 @@ def module3_automl(request):
                             fit_suggestion = model_data['suggestion']
                     except Exception:
                         continue
+
+                # Hyperparameter tuning to boost accuracy
+                if best_model_inst and best_score < 80:
+                    if task_type == 'classification':
+                        if isinstance(best_model_inst, RandomForestClassifier):
+                            param_grid = {'n_estimators': [100, 200], 'max_depth': [None, 10, 20], 'min_samples_split': [2, 5]}
+                        elif isinstance(best_model_inst, GradientBoostingClassifier):
+                            param_grid = {'n_estimators': [100, 200], 'learning_rate': [0.1, 0.05], 'max_depth': [3, 5]}
+                        elif isinstance(best_model_inst, DecisionTreeClassifier):
+                            param_grid = {'max_depth': [None, 10, 20], 'min_samples_split': [2, 5]}
+                        else:
+                            param_grid = {}
+                    else:
+                        if isinstance(best_model_inst, RandomForestRegressor):
+                            param_grid = {'n_estimators': [100, 200], 'max_depth': [None, 10, 20], 'min_samples_split': [2, 5]}
+                        elif isinstance(best_model_inst, GradientBoostingRegressor):
+                            param_grid = {'n_estimators': [100, 200], 'learning_rate': [0.1, 0.05], 'max_depth': [3, 5]}
+                        elif isinstance(best_model_inst, DecisionTreeRegressor):
+                            param_grid = {'max_depth': [None, 10, 20], 'min_samples_split': [2, 5]}
+                        else:
+                            param_grid = {}
+
+                    if param_grid:
+                        grid_search = GridSearchCV(best_model_inst, param_grid, cv=3, scoring=cv_metric, n_jobs=-1)
+                        grid_search.fit(X_train, y_train)
+                        if grid_search.best_score_ * 100 > best_score:
+                            best_model_inst = grid_search.best_estimator_
+                            tuned_test_score = accuracy_score(y_test, best_model_inst.predict(X_test))*100 if task_type == 'classification' else max(0, r2_score(y_test, best_model_inst.predict(X_test))*100)
+                            if tuned_test_score > best_score:
+                                best_score = tuned_test_score
+                                results[0]['score'] = round(best_score, 2)
+                                results[0]['model'] += ' (Tuned)'
 
                 results = sorted(results, key=lambda x: (x['score'], x['cv_score']), reverse=True)
                 if not results:

@@ -106,6 +106,10 @@
         </div>
 
         {% else %}
+        <form method="POST" enctype="multipart/form-data" id="active-upload-form" style="display:none;">
+            {% csrf_token %}
+            <input type="file" id="new-file" name="new_dataset" onchange="this.form.submit()">
+        </form>
         <div class="row g-4 mb-4">
             <div class="col-xl-8">
                 <div class="glass-card p-4" data-aos="fade-up">
@@ -118,20 +122,26 @@
                         <div class="d-flex flex-wrap gap-2 align-items-center">
                             <span class="info-chip"><i class="fa-solid fa-database me-1"></i> {{ total_rows }} rows</span>
                             <span class="info-chip"><i class="fa-solid fa-columns me-1"></i> {{ all_cols|length }} features</span>
-                            <button class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="document.getElementById('quick-upload').click();">Change File</button>
+                            <button class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="document.getElementById('new-file').click();">Change File</button>
                         </div>
                     </div>
 
                     <div class="row g-3 mt-3">
                         <div class="col-auto">
-                            <form method="POST" class="m-0" onsubmit="showLoader()">
+                            <form method="POST" class="m-0" onsubmit="showLoader(); showProgress()">
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="auto_dashboard">
-                                <button type="submit" class="btn btn-glow rounded-pill px-4 py-2"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Generate Exec Dashboard</button>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <select name="insight_level" class="form-select form-select-sm" style="width: auto;">
+                                        <option value="basic">Basic Insights</option>
+                                        <option value="advanced">Advanced Insights</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-glow rounded-pill px-4 py-2"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Generate Exec Dashboard</button>
+                                </div>
                             </form>
                         </div>
                         <div class="col-auto">
-                            <button type="button" class="btn btn-outline-light rounded-pill px-4 py-2" onclick="document.getElementById('quick-upload').click();"><i class="fa-solid fa-file-arrow-up me-2"></i>Load New File</button>
+                            <button type="button" class="btn btn-outline-light rounded-pill px-4 py-2" onclick="document.getElementById('new-file').click();"><i class="fa-solid fa-file-arrow-up me-2"></i>Load New File</button>
                         </div>
                     </div>
 
@@ -186,12 +196,12 @@
                 </div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6 col-xl-2"><div class="kpi-box"><span class="small text-muted">Total rows</span><h4 class="fw-bold mb-0">{{ auto_summary.kpi1_val }}</h4></div></div>
-                <div class="col-md-6 col-xl-2"><div class="kpi-box"><span class="small text-muted">Features</span><h4 class="fw-bold mb-0">{{ auto_summary.kpi2_val }}</h4></div></div>
-                <div class="col-md-6 col-xl-2"><div class="kpi-box"><span class="small text-muted">Numeric cols</span><h4 class="fw-bold mb-0">{{ auto_summary.numeric_cols }}</h4></div></div>
-                <div class="col-md-6 col-xl-2"><div class="kpi-box"><span class="small text-muted">Categorical cols</span><h4 class="fw-bold mb-0">{{ auto_summary.categorical_cols }}</h4></div></div>
-                <div class="col-md-6 col-xl-2"><div class="kpi-box"><span class="small text-muted">Missing values</span><h4 class="fw-bold mb-0">{{ auto_summary.missing }} ({{ auto_summary.missing_pct }}%)</h4></div></div>
-                <div class="col-md-6 col-xl-2"><div class="kpi-box"><span class="small text-muted">Health</span><h4 class="fw-bold mb-0">{{ auto_summary.health|default:'N/A' }}</h4></div></div>
+                <div class="col-md-6 col-xl-2"><div class="kpi-box"><span class="small text-muted">Total rows</span><h4 class="fw-bold mb-0">{{ auto_summary.rows|default:"0" }}</h4></div></div>
+                <div class="col-md-6 col-xl-2"><div class="kpi-box"><span class="small text-muted">Features</span><h4 class="fw-bold mb-0">{{ auto_summary.features|default:"0" }}</h4></div></div>
+                <div class="col-md-6 col-xl-2"><div class="kpi-box"><span class="small text-muted">Numeric cols</span><h4 class="fw-bold mb-0">{{ auto_summary.numeric_cols|default:"0" }}</h4></div></div>
+                <div class="col-md-6 col-xl-2"><div class="kpi-box"><span class="small text-muted">Categorical cols</span><h4 class="fw-bold mb-0">{{ auto_summary.categorical_cols|default:"0" }}</h4></div></div>
+                <div class="col-md-6 col-xl-2"><div class="kpi-box"><span class="small text-muted">Missing values</span><h4 class="fw-bold mb-0">{{ auto_summary.missing|default:"0" }} ({{ auto_summary.missing_pct|default:"0" }}%)</h4></div></div>
+                <div class="col-md-6 col-xl-2"><div class="kpi-box"><span class="small text-muted">Health</span><h4 class="fw-bold mb-0">{{ auto_summary.health|default:"N/A" }}</h4></div></div>
             </div>
             <div class="row g-3 mb-4">
                 <div class="col-xl-4">
@@ -202,11 +212,22 @@
                             <li class="mb-2"><i class="fa-solid fa-circle-info text-info me-2"></i>{{ insight }}</li>
                             {% endfor %}
                         </ul>
+                        {% if ai_narrative %}
+                        <hr class="my-3 border-secondary">
+                        <h6 class="text-purple mb-2">AI Narrative</h6>
+                        <p class="text-muted small">{{ ai_narrative }}</p>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="col-xl-8">
                     <div class="glass-card p-3 h-100">
-                        <h6 class="text-white mb-3">Top column summaries</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-white mb-0">Top column summaries</h6>
+                            <div class="d-flex gap-2">
+                                <button onclick="exportDashboard()" class="btn btn-sm btn-outline-success rounded-pill px-3"><i class="fa-solid fa-download me-1"></i>Export</button>
+                                <button onclick="saveDashboard()" class="btn btn-sm btn-outline-primary rounded-pill px-3"><i class="fa-solid fa-save me-1"></i>Save</button>
+                            </div>
+                        </div>
                         {% if column_summaries %}
                         <div class="row g-3">
                             {% for stat in column_summaries %}
@@ -228,7 +249,12 @@
             </div>
             <div class="row g-3">
                 {% for chart in auto_dashboard_charts %}
-                <div class="col-xl-6"><div class="graph-canvas" style="min-height:320px;">{{ chart|safe }}</div></div>
+                <div class="col-xl-6">
+                    <div class="graph-canvas resizable-chart" style="min-height:500px; position:relative;">
+                        {{ chart|safe }}
+                        <div class="resize-handle" style="position:absolute; bottom:0; right:0; width:20px; height:20px; cursor:nw-resize; background: rgba(255,255,255,0.1); border-radius:4px;"></div>
+                    </div>
+                </div>
                 {% endfor %}
             </div>
         </div>
@@ -351,6 +377,79 @@
     <script>
         AOS.init(); function setTheme(t) { document.cookie = "idm_theme=" + t + "; path=/; max-age=31536000"; window.location.reload(); }
         function showLoader() { document.getElementById('ai-loader').classList.add('active'); }
+        
+        // Progress Animation
+        function showProgress() {
+            const steps = {% if progress_steps %}{{ progress_steps|safe }}{% else %}[]{% endif %};
+            if (steps.length === 0) return;
+            let stepIndex = 0;
+            const progressDiv = document.createElement('div');
+            progressDiv.innerHTML = `
+                <div class="progress mb-2" style="height: 6px;">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                </div>
+                <p class="text-info small mb-0" id="progress-text">${steps[0]}</p>
+            `;
+            document.querySelector('.ai-loader .text-center').appendChild(progressDiv);
+            const interval = setInterval(() => {
+                stepIndex++;
+                if (stepIndex >= steps.length) {
+                    clearInterval(interval);
+                    return;
+                }
+                document.getElementById('progress-text').textContent = steps[stepIndex];
+                const progressBar = document.querySelector('.progress-bar');
+                progressBar.style.width = `${(stepIndex + 1) / steps.length * 100}%`;
+            }, 1000);
+        }
+        
+        // Resize Charts
+        document.addEventListener('DOMContentLoaded', function() {
+            const resizableCharts = document.querySelectorAll('.resizable-chart');
+            resizableCharts.forEach(chart => {
+                const handle = chart.querySelector('.resize-handle');
+                let isResizing = false;
+                let startY, startHeight;
+                
+                handle.addEventListener('mousedown', function(e) {
+                    isResizing = true;
+                    startY = e.clientY;
+                    startHeight = chart.offsetHeight;
+                    e.preventDefault();
+                });
+                
+                document.addEventListener('mousemove', function(e) {
+                    if (!isResizing) return;
+                    const newHeight = startHeight + (e.clientY - startY);
+                    if (newHeight > 300) chart.style.height = newHeight + 'px';
+                });
+                
+                document.addEventListener('mouseup', function() {
+                    isResizing = false;
+                });
+            });
+        });
+        
+        // Export Dashboard
+        function exportDashboard() {
+            const data = {{ export_data|safe }};
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'dashboard_export.json';
+            link.click();
+        }
+        
+        // Save Dashboard
+        function saveDashboard() {
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'action=save_dashboard&csrfmiddlewaretoken=' + document.querySelector('[name=csrfmiddlewaretoken]').value
+            }).then(() => {
+                Swal.fire('Saved!', 'Dashboard saved successfully.', 'success');
+            });
+        }
         
         // 🌟 SWEET ALERTS 🌟
         document.addEventListener("DOMContentLoaded", function() {
